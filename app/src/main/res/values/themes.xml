@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.TaipeiTrash" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.TaipeiTrash.AppCompat" parent="Theme.AppCompat.Light.NoActionBar" />
+
+</resources>
