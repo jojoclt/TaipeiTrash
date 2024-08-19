@@ -1,6 +1,7 @@
 package com.jojodev.taipeitrash.data.network
 
 import com.jojodev.taipeitrash.data.TrashCan
+import com.jojodev.taipeitrash.data.TrashResults
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -27,7 +28,7 @@ interface TrashApiService {
         @Query("limit") limit: Int = 1000,
         @Query("offset") offset: Int = 0,
         @Query("scope") scope: String = "resourceAquire"
-    ): TrashCan
+    ): TrashResults
 }
 
 object TrashApi {

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 
 // Use AppCompatActivity instead of ComponentActivity for Android 12 and lower to support language switching (AppCompat API)
@@ -35,51 +36,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
+            val navController = rememberNavController()
             TaipeiTrashTheme {
-                Log.v("MainActivity", "viewModel.uistate: ${viewModel.uistate}")
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column {
-                        Greeting(
-                            name = stringResource(R.string.android),
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                        if (viewModel.uistate == ApiStatus.LOADING) {
-                            IndeterminateCircularIndicator()
-                        }
-                        else if (viewModel.uistate == ApiStatus.ERROR) {
-                            Text(
-                                text = "ERROR",
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        else {
-                            LazyColumn {
-                                val res = viewModel.result!!.result.results.map { it.address }
-                                items(res) {
-                                    Text(
-                                        text = it,
-                                        modifier = Modifier.padding(innerPadding)
-                                    )
-                                }
-                            }
-//                            viewModel.result?.let {
-//                                for (result in it.result.results) {
-//                                    Text(
-//                                        text = result.address,
-//                                        modifier = Modifier.padding(innerPadding)
-//                                    )
-//                                }
-//                            }
-//                            Text(
-//                                text = viewModel.result.toString(),
-//                                modifier = Modifier.padding(innerPadding)
-//                            )
-                        }
-                    }
-                }
-            }
+                MainNavigation(navController = navController)
+//                Log.v("MainActivity", "viewModel.uistate: ${viewModel.uistate}")
+
+               }
         }
     }
 }

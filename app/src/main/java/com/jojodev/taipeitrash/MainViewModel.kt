@@ -6,8 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jojodev.taipeitrash.data.TrashCan
-import com.jojodev.taipeitrash.data.network.MarsApi
+import com.jojodev.taipeitrash.data.TrashResults
 import com.jojodev.taipeitrash.data.network.TrashApi
 import kotlinx.coroutines.launch
 
@@ -15,7 +14,7 @@ class MainViewModel: ViewModel() {
     var uistate by mutableStateOf<ApiStatus>(ApiStatus.LOADING)
         private set
 
-    var result by mutableStateOf<TrashCan?>(null)
+    var response by mutableStateOf<TrashResults?>(null)
         private set
 
     init {
@@ -27,11 +26,11 @@ class MainViewModel: ViewModel() {
             try {
                 val listResult = TrashApi.retrofitService.getTrashCan()
                 uistate = ApiStatus.DONE
-                result = listResult
+                response = listResult
             } catch (e: Exception) {
                 Log.e("MainViewModel", "getTrash: ${e.message}")
                 uistate = ApiStatus.ERROR
-                result = null
+                response = null
             }
         }
     }

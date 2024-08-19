@@ -2,21 +2,27 @@ package com.jojodev.taipeitrash.data
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 @JsonClass(generateAdapter = true)
-data class TrashCan(
+data class TrashResults(
     val result: Result
 )
+
+@Serializable
 @JsonClass(generateAdapter = true)
 data class Result(
     val count: Int,
     val limit: Int,
     val offset: Int,
-    val results: List<ResultX>,
+    @Json(name = "results")
+    val trashCans: List<TrashCan>,
     val sort: String
 )
+
+@Serializable
 @JsonClass(generateAdapter = true)
-data class ResultX(
+data class TrashCan(
     val _id: Int,
     val _importdate: Importdate,
     @Json(name = "備註")
@@ -30,6 +36,8 @@ data class ResultX(
     @Json(name = "行政區")
     val district: String
 )
+
+@Serializable
 @JsonClass(generateAdapter = true)
 data class Importdate(
     val date: String,

@@ -1,6 +1,11 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
+    id("kotlin-parcelize") // needed only for non-primitive classes
+
 }
 
 android {
@@ -18,6 +23,17 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        //load the values from .properties file
+        val mapsKeyFile = project.rootProject.file("local.properties")
+        val properties = Properties()
+        properties.load(mapsKeyFile.inputStream())
+
+        //fetch the map key
+                val apiKey = properties.getProperty("MAPS_API_KEY") ?: ""
+
+        //inject the key dynamically into the manifest
+                manifestPlaceholders["GOOGLE_KEY"] = apiKey
     }
 
     buildTypes {
@@ -65,6 +81,10 @@ dependencies {
     implementation(libs.retrofit.converter.scalars)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.moshi.kotlin)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.google.maps.compose)
+    implementation(libs.google.maps.compose.utils)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
