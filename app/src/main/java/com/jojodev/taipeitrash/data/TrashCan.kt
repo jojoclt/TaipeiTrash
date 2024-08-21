@@ -30,9 +30,9 @@ data class TrashCan(
     @Json(name = "地址")
     val address: String,
     @Json(name = "經度")
-    val latitude: Float,
+    val longitude: Double,
     @Json(name = "緯度")
-    val longitude: Float,
+    val latitude: Double,
     @Json(name = "行政區")
     val district: String
 )

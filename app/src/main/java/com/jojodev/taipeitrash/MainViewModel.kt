@@ -17,11 +17,12 @@ class MainViewModel: ViewModel() {
     var response by mutableStateOf<TrashResults?>(null)
         private set
 
-    init {
-        getTrashCan()
-    }
+//    init {
+//        Log.v("MainViewModel", "init")
+//        getTrashCan()
+//    }
 
-    private fun getTrashCan() {
+    fun getTrashCan() {
         viewModelScope.launch {
             try {
                 val listResult = TrashApi.retrofitService.getTrashCan()
@@ -47,6 +48,11 @@ class MainViewModel: ViewModel() {
 //                list = listOf()
 //            }
 //        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.v("MainViewModel", "onCleared")
     }
 }
 

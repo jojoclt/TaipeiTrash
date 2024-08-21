@@ -1,5 +1,6 @@
 package com.jojodev.taipeitrash.presentation.TrashCanScreen
 
+import android.util.Log
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +10,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -29,26 +35,61 @@ import com.jojodev.taipeitrash.Greeting
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.MainViewModel
 import com.jojodev.taipeitrash.R
+import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
 fun TrashCanScreen(navController: NavHostController) {
     Text("TrashCanScreen")
-    val singapore = LatLng(1.35, 103.87)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
-    }
-    NewComposable()
-//    mapCompose()
-//    GoogleMap(
-//        modifier = Modifier.fillMaxSize(),
-//        cameraPositionState = cameraPositionState
-//    ) {
-//        Marker(
-//            state = MarkerState(position = singapore),
-//            title = "Singapore",
-//            snippet = "Marker in Singapore"
-//        )
+//    val singapore = LatLng(1.35, 103.87)
+//    val cameraPositionState = rememberCameraPositionState {
+//        position = CameraPosition.fromLatLngZoom(singapore, 10f)
 //    }
+//    NewComposable()
+//    mapCompose()
+    val viewModel = viewModel<MainViewModel>()
+//    why does viewModel = MainViewModel() not work?
+    when (viewModel.uistate) {
+        ApiStatus.LOADING -> {
+            IndeterminateCircularIndicator {viewModel.getTrashCan() }
+        }
+        ApiStatus.ERROR -> {
+            Text(
+                text = "ERROR",
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+        ApiStatus.DONE -> {
+            val res = viewModel.response!!.result.trashCans
+            TrashCanMap(trashCan = res)
+        }
+    }
+}
+
+@OptIn(MapsComposeExperimentalApi::class)
+@Composable
+fun TrashCanMap(trashCan: List<TrashCan>) {
+    val taipeiMain = LatLng(25.0330, 121.5654)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(taipeiMain, 10f)
+    }
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState) {
+
+        val trashMarker = remember {
+            trashCan.map { MarkerItem(LatLng(it.latitude, it.longitude), it.address, "Marker in ${it._id}") }.toMutableStateList()
+        }
+//        else this foreach will run forever (cuz of recomposition?)
+//        LaunchedEffect(key1 = trashCan) {
+//            trashMarker.clear()
+//            trashCan.forEach {
+////                Log.v("TrashCanMap", "trashCan: ${it.address}")
+//                trashMarker.add(MarkerItem(LatLng(it.latitude, it.longitude), it.address, "Marker in ${it._id}"))
+//            }
+//            Log.v("TrashCanMap", "trashMarker: ${trashMarker.size}")
+//        }
+        Clustering(items = trashMarker)
+    }
 }
 
 @OptIn(MapsComposeExperimentalApi::class)
@@ -71,12 +112,12 @@ fun mapCompose() {
 
         val parkMarkers = remember {
             mutableStateListOf(
-                ParkItem(hydePark, "Hyde Park", "Marker in hyde Park"),
-                ParkItem(regentsPark, "Regents Park", "Marker in Regents Park"),
-                ParkItem(primroseHill, "Primrose Hill", "Marker in Primrose Hill"),
-                ParkItem(crystalPalacePark, "Crystal Palace", "Marker in Crystal Palace"),
-                ParkItem(greenwichPark, "Greenwich Park", "Marker in Greenwich Park"),
-                ParkItem(lloydPark, "Lloyd park", "Marker in Lloyd Park"),
+                MarkerItem(hydePark, "Hyde Park", "Marker in hyde Park"),
+                MarkerItem(regentsPark, "Regents Park", "Marker in Regents Park"),
+                MarkerItem(primroseHill, "Primrose Hill", "Marker in Primrose Hill"),
+                MarkerItem(crystalPalacePark, "Crystal Palace", "Marker in Crystal Palace"),
+                MarkerItem(greenwichPark, "Greenwich Park", "Marker in Greenwich Park"),
+                MarkerItem(lloydPark, "Lloyd park", "Marker in Lloyd Park"),
             )
         }
 
@@ -84,8 +125,7 @@ fun mapCompose() {
     }
 }
 
-
-data class ParkItem(
+data class MarkerItem(
     val itemPosition: LatLng,
     val itemTitle: String,
     val itemSnippet: String,
@@ -112,7 +152,7 @@ fun NewComposable() {
                     modifier = Modifier.padding(innerPadding)
                 )
                 if (viewModel.uistate == ApiStatus.LOADING) {
-                    IndeterminateCircularIndicator()
+                    IndeterminateCircularIndicator {viewModel.getTrashCan() }
                 }
                 else if (viewModel.uistate == ApiStatus.ERROR) {
                     Text(

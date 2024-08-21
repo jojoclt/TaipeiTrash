@@ -58,16 +58,25 @@ class MainActivity : AppCompatActivity() {
             )
             TaipeiTrashTheme {
                 var selected by remember { mutableStateOf(0) }
-                Scaffold (
+                Scaffold(
                     bottomBar = {
                         NavigationBar {
                             val navBackStackEntry by navController.currentBackStackEntryAsState()
                             val currentDestination = navBackStackEntry?.destination
-                            items.forEach{ screen ->
+                            items.forEach { screen ->
                                 NavigationBarItem(
-                                    icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+                                    icon = {
+                                        Icon(
+                                            Icons.Filled.Favorite,
+                                            contentDescription = null
+                                        )
+                                    },
                                     label = { Text(screen.name) },
-                                    selected = currentDestination?.hierarchy?.any { it.hasRoute(screen::class) } == true,
+                                    selected = currentDestination?.hierarchy?.any {
+                                        it.hasRoute(
+                                            screen::class
+                                        )
+                                    } == true,
                                     onClick = {
 //                                        selected = idx
                                         navController.navigate(screen) {
@@ -113,10 +122,13 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun IndeterminateCircularIndicator() {
+fun IndeterminateCircularIndicator(onClick: () -> Unit = {}) {
     var loading by remember { mutableStateOf(false) }
 
-    Button(onClick = { loading = true }, enabled = !loading) {
+    Button(onClick = {
+        loading = true
+        onClick()
+    }, enabled = !loading) {
         Text("Start loading")
     }
 

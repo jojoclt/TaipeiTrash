@@ -22,6 +22,8 @@ fun MainNavigation(navController: NavHostController, startDestination: Routes = 
     }
 }
 
+//to make the routes serializable, add var or val instead of non-defining type
+//https://stackoverflow.com/questions/60409838/difference-between-val-parameter-or-without-val
 @Serializable
 sealed class Routes(val name: String) {
     @Serializable

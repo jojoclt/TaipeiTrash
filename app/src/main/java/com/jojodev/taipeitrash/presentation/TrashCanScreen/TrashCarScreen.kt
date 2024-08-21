@@ -6,4 +6,6 @@ import androidx.compose.runtime.Composable
 @Composable
 fun TrashCarScreen() {
     Text("AAA")
+    NewComposable()
+
 }
