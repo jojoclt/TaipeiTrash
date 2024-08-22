@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jojodev.taipeitrash.data.TrashCan
 import com.jojodev.taipeitrash.data.TrashResults
 import com.jojodev.taipeitrash.data.network.TrashApi
 import kotlinx.coroutines.launch
@@ -15,6 +16,8 @@ class MainViewModel: ViewModel() {
         private set
 
     var response by mutableStateOf<TrashResults?>(null)
+        private set
+    var trashCan by mutableStateOf<List<TrashCan>>(listOf())
         private set
 
 //    init {
@@ -26,15 +29,41 @@ class MainViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 val listResult = TrashApi.retrofitService.getTrashCan()
-                uistate = ApiStatus.DONE
                 response = listResult
+                uistate = ApiStatus.DONE
             } catch (e: Exception) {
                 Log.e("MainViewModel", "getTrash: ${e.message}")
-                uistate = ApiStatus.ERROR
                 response = null
+                uistate = ApiStatus.ERROR
             }
         }
     }
+
+    fun getAllTrashCans() {
+        viewModelScope.launch {
+            var offset = 0
+            val list = mutableListOf<TrashCan>()
+            val limit = 1000
+            var count = -1
+            do {
+                try {
+                    val listResult = TrashApi.retrofitService.getTrashCan(offset = offset)
+                    if (count < 0) count = listResult.result.count
+                    list.addAll(listResult.result.trashCans)
+                    offset += limit
+                } catch (e: Exception) {
+                    Log.e("MainViewModel", "getAllTrashCans: ${e.message}")
+                    trashCan = listOf()
+                    uistate = ApiStatus.ERROR
+                    return@launch
+                }
+            } while (offset < count)
+            trashCan = list
+            uistate = ApiStatus.DONE
+            Log.i("MainViewModel", "getAllTrashCans: ${trashCan.size}")
+        }
+    }
+
 
     private fun getMarsPhotos() {
 //        viewModelScope.launch {

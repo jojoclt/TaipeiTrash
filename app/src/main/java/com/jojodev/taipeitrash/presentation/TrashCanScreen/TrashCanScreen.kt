@@ -50,7 +50,7 @@ fun TrashCanScreen(navController: NavHostController) {
 //    why does viewModel = MainViewModel() not work?
     when (viewModel.uistate) {
         ApiStatus.LOADING -> {
-            IndeterminateCircularIndicator {viewModel.getTrashCan() }
+            IndeterminateCircularIndicator {viewModel.getAllTrashCans() }
         }
         ApiStatus.ERROR -> {
             Text(
@@ -59,7 +59,8 @@ fun TrashCanScreen(navController: NavHostController) {
             )
         }
         ApiStatus.DONE -> {
-            val res = viewModel.response!!.result.trashCans
+            val res = viewModel.trashCan
+            Log.i("TrashCanScreen", res.size.toString())
             TrashCanMap(trashCan = res)
         }
     }
@@ -77,7 +78,7 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
         cameraPositionState = cameraPositionState) {
 
         val trashMarker = remember {
-            trashCan.map { MarkerItem(LatLng(it.latitude, it.longitude), it.address, "Marker in ${it._id}") }.toMutableStateList()
+            trashCan.map { MarkerItem(LatLng(it.latitude.removePrefix("?").toDouble(), it.longitude.removePrefix("?").toDouble()), it.address, "Marker in ${it._id}") }.toMutableStateList()
         }
 //        else this foreach will run forever (cuz of recomposition?)
 //        LaunchedEffect(key1 = trashCan) {
@@ -144,7 +145,7 @@ data class MarkerItem(
 }
 @Composable
 fun NewComposable() {
-    val viewModel = MainViewModel()
+    val viewModel = viewModel<MainViewModel>()
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Column {
                 Greeting(
@@ -152,7 +153,7 @@ fun NewComposable() {
                     modifier = Modifier.padding(innerPadding)
                 )
                 if (viewModel.uistate == ApiStatus.LOADING) {
-                    IndeterminateCircularIndicator {viewModel.getTrashCan() }
+                    IndeterminateCircularIndicator {viewModel.getAllTrashCans() }
                 }
                 else if (viewModel.uistate == ApiStatus.ERROR) {
                     Text(
@@ -161,8 +162,13 @@ fun NewComposable() {
                     )
                 }
                 else {
+                    val res = viewModel.trashCan
+                    Text(
+                        text = res.size.toString(),
+                        modifier = Modifier.padding(innerPadding)
+                    )
                     LazyColumn {
-                        val res = viewModel.response!!.result.trashCans
+//                        val res = viewModel.response!!.result.trashCans
                         items(res) {
                             Text(
                                 text = it.address,

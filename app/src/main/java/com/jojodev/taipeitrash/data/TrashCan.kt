@@ -30,12 +30,13 @@ data class TrashCan(
     @Json(name = "地址")
     val address: String,
     @Json(name = "經度")
-    val longitude: Double,
+    val longitude: String,
     @Json(name = "緯度")
-    val latitude: Double,
+    val latitude: String,
     @Json(name = "行政區")
     val district: String
 )
+//2024-08-22 13:15:11.877  E  getAllTrashCans: Expected a double but was ?121.595369 at path $.result.results[113].經度
 
 @Serializable
 @JsonClass(generateAdapter = true)

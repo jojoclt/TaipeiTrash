@@ -25,8 +25,8 @@ private val retrofit = Retrofit.Builder()
 interface TrashApiService {
     @GET("267d550f-c6ec-46e0-b8af-fd5a464eb098")
     suspend fun getTrashCan(
-        @Query("limit") limit: Int = 1000,
         @Query("offset") offset: Int = 0,
+        @Query("limit") limit: Int = 1000,
         @Query("scope") scope: String = "resourceAquire"
     ): TrashResults
 }
