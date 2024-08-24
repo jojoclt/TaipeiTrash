@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                                 NavigationBarItem(
                                     icon = {
                                         Icon(
-                                            Icons.Filled.Favorite,
+                                            screen.icon,
                                             contentDescription = null
                                         )
                                     },

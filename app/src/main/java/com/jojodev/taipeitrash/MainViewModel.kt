@@ -20,6 +20,10 @@ class MainViewModel: ViewModel() {
     var trashCan by mutableStateOf<List<TrashCan>>(listOf())
         private set
 
+    var importDate by mutableStateOf<String>("")
+        private set
+
+
 //    init {
 //        Log.v("MainViewModel", "init")
 //        getTrashCan()
@@ -48,7 +52,13 @@ class MainViewModel: ViewModel() {
             do {
                 try {
                     val listResult = TrashApi.retrofitService.getTrashCan(offset = offset)
-                    if (count < 0) count = listResult.result.count
+                    if (count < 0) {
+                        if (listResult.result.count == 0) {
+                            throw Exception("No data")
+                        }
+                        count = listResult.result.count
+                        importDate = listResult.result.trashCans[0]._importdate.date
+                    }
                     list.addAll(listResult.result.trashCans)
                     offset += limit
                 } catch (e: Exception) {

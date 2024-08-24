@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,30 +39,26 @@ import com.jojodev.taipeitrash.R
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
-fun TrashCanScreen(navController: NavHostController) {
-    Text("TrashCanScreen")
-//    val singapore = LatLng(1.35, 103.87)
-//    val cameraPositionState = rememberCameraPositionState {
-//        position = CameraPosition.fromLatLngZoom(singapore, 10f)
-//    }
-//    NewComposable()
-//    mapCompose()
-    val viewModel = viewModel<MainViewModel>()
-//    why does viewModel = MainViewModel() not work?
-    when (viewModel.uistate) {
-        ApiStatus.LOADING -> {
-            IndeterminateCircularIndicator {viewModel.getAllTrashCans() }
-        }
-        ApiStatus.ERROR -> {
-            Text(
-                text = "ERROR",
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-        ApiStatus.DONE -> {
-            val res = viewModel.trashCan
-            Log.i("TrashCanScreen", res.size.toString())
-            TrashCanMap(trashCan = res)
+fun TrashCanScreen(onButtonClick : () -> Unit, uiStatus: ApiStatus, res: List<TrashCan>) {
+    Column {
+        Text("TrashCanScreen")
+
+        when (uiStatus) {
+            ApiStatus.LOADING -> {
+                IndeterminateCircularIndicator { onButtonClick() }
+            }
+
+            ApiStatus.ERROR -> {
+                Text(
+                    text = "ERROR",
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            ApiStatus.DONE -> {
+                Log.i("TrashCanScreen", res.size.toString())
+                TrashCanMap(trashCan = res)
+            }
         }
     }
 }
@@ -92,6 +89,7 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
         Clustering(items = trashMarker)
     }
 }
+
 
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
@@ -142,58 +140,4 @@ data class MarkerItem(
 
     override fun getZIndex(): Float =
         itemZIndex
-}
-@Composable
-fun NewComposable() {
-    val viewModel = viewModel<MainViewModel>()
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Column {
-                Greeting(
-                    name = stringResource(R.string.android),
-                    modifier = Modifier.padding(innerPadding)
-                )
-                if (viewModel.uistate == ApiStatus.LOADING) {
-                    IndeterminateCircularIndicator {viewModel.getAllTrashCans() }
-                }
-                else if (viewModel.uistate == ApiStatus.ERROR) {
-                    Text(
-                        text = "ERROR",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-                else {
-                    val res = viewModel.trashCan
-                    Text(
-                        text = res.size.toString(),
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                    LazyColumn {
-//                        val res = viewModel.response!!.result.trashCans
-                        items(res) {
-                            Text(
-                                text = it.address,
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                            Text(
-                                text = "${it.latitude}, ${it.longitude}",
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                    }
-//                            viewModel.result?.let {
-//                                for (result in it.result.results) {
-//                                    Text(
-//                                        text = result.address,
-//                                        modifier = Modifier.padding(innerPadding)
-//                                    )
-//                                }
-//                            }
-//                            Text(
-//                                text = viewModel.result.toString(),
-//                                modifier = Modifier.padding(innerPadding)
-//                            )
-                }
-            }
-        }
-
 }
