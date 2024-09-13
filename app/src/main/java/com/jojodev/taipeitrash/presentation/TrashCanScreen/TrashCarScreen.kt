@@ -17,16 +17,19 @@ import com.jojodev.taipeitrash.Greeting
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.R
 import com.jojodev.taipeitrash.data.TrashCan
-import java.text.SimpleDateFormat
 
 @Composable
 fun TrashCarScreen(
     onButtonClick: () -> Unit,
+    onClearClick: () -> Unit,
     uiStatus: ApiStatus,
     res: List<TrashCan>,
     importDate: String
 ) {
     Column {
+        Button(onClick = { onClearClick() }) {
+            Text("Clear Data")
+        }
         NewComposable(
             onButtonClick = onButtonClick,
             uiStatus = uiStatus,

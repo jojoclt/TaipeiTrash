@@ -4,11 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,10 +27,14 @@ fun MainNavigation(navController: NavHostController, startDestination: Routes = 
                 navController.getBackStackEntry(Routes.TrashCanScreen)
             }
             val viewModel: MainViewModel = viewModel(parent)
+            val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()
+            val trashCan by viewModel.trashCan.collectAsStateWithLifecycle()
+//            why collectasstatewithlifecycle is better...
+
             TrashCanScreen(
                 onButtonClick = viewModel::getAllTrashCans, // or { viewModel.getTrashCan() }
-                uiStatus = viewModel.uistate,
-                res = viewModel.trashCan
+                uiStatus = uiStatus,
+                res = trashCan
             )
         }
         composable<Routes.TrashCarScreen> {
@@ -37,11 +42,16 @@ fun MainNavigation(navController: NavHostController, startDestination: Routes = 
                 navController.getBackStackEntry(Routes.TrashCanScreen)
             }
             val viewModel: MainViewModel = viewModel(parent)
+            val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()
+            val trashCan by viewModel.trashCan.collectAsStateWithLifecycle()
+            val importDate by viewModel.importDate.collectAsStateWithLifecycle()
+
             TrashCarScreen(
                 onButtonClick = { viewModel.getAllTrashCans() },
-                uiStatus = viewModel.uistate,
-                res = viewModel.trashCan,
-                importDate = viewModel.importDate
+                onClearClick = { viewModel.clearTrashCan() },
+                uiStatus = uiStatus,
+                res = trashCan,
+                importDate = importDate
             )
         }
     }
