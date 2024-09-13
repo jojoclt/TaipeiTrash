@@ -39,7 +39,7 @@ import com.jojodev.taipeitrash.R
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
-fun TrashCanScreen(onButtonClick : () -> Unit, uiStatus: ApiStatus, res: List<TrashCan>) {
+fun TrashCanScreen(onButtonClick: () -> Unit, uiStatus: ApiStatus, res: List<TrashCan>) {
     Column {
         Text("TrashCanScreen")
 
@@ -72,10 +72,25 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
     }
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState) {
+        cameraPositionState = cameraPositionState
+    ) {
 
         val trashMarker = remember {
-            trashCan.map { MarkerItem(LatLng(it.latitude.removePrefix("?").toDouble(), it.longitude.removePrefix("?").toDouble()), it.address, "Marker in ${it._id}") }.toMutableStateList()
+            trashCan.mapNotNull {
+                try {
+                    MarkerItem(
+                        LatLng(
+                            it.latitude.removePrefix("?").toDouble(),
+                            it.longitude.removePrefix("?").toDouble()
+                        ), it.address, "Marker in ${it._id}"
+                    )
+                }
+                catch (e: Exception) {
+                    Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
+                    null
+                }
+            }.toMutableStateList()
+
         }
 //        else this foreach will run forever (cuz of recomposition?)
 //        LaunchedEffect(key1 = trashCan) {
@@ -107,7 +122,8 @@ fun mapCompose() {
 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState) {
+        cameraPositionState = cameraPositionState
+    ) {
 
         val parkMarkers = remember {
             mutableStateListOf(
@@ -128,7 +144,8 @@ data class MarkerItem(
     val itemPosition: LatLng,
     val itemTitle: String,
     val itemSnippet: String,
-    val itemZIndex: Float = 0f) : ClusterItem {
+    val itemZIndex: Float = 0f
+) : ClusterItem {
     override fun getPosition(): LatLng =
         itemPosition
 
