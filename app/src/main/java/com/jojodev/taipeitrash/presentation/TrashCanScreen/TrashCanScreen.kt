@@ -105,7 +105,7 @@ fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
             // Launch the permission request for multiple permissions
             multiplePermissionsLauncher.launch(
                 arrayOf(
-                    Manifest.permission.CAMERA,
+//                    Manifest.permission.CAMERA,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             )
