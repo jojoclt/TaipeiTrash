@@ -11,6 +11,7 @@ import com.jojodev.taipeitrash.data.TrashResults
 import com.jojodev.taipeitrash.data.network.TrashApi
 import kotlinx.coroutines.launch
 
+//https://stackoverflow.com/questions/67128991/android-get-response-status-code-using-retrofit-and-coroutines
 class MainViewModel: ViewModel() {
     var uistate by mutableStateOf<ApiStatus>(ApiStatus.LOADING)
         private set

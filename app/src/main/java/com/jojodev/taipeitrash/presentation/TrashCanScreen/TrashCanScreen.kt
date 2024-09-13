@@ -7,13 +7,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +29,8 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -53,6 +58,7 @@ fun TrashCanScreen(onButtonClick: () -> Unit, uiStatus: ApiStatus, res: List<Tra
                     text = "ERROR",
                     modifier = Modifier.padding(16.dp)
                 )
+                IndeterminateCircularIndicator { onButtonClick() }
             }
 
             ApiStatus.DONE -> {
@@ -70,9 +76,25 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 10f)
     }
+    var mapProperties by remember {
+        mutableStateOf(
+            MapProperties(
+//                maxZoomPreference = 10f,
+                minZoomPreference = 10f,
+                isMyLocationEnabled = true
+            )
+        )
+    }
+    var mapUiSettings by remember {
+        mutableStateOf(
+            MapUiSettings(mapToolbarEnabled = true)
+        )
+    }
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState
+        cameraPositionState = cameraPositionState,
+        uiSettings = mapUiSettings,
+        properties = mapProperties
     ) {
 
         val trashMarker = remember {
@@ -84,8 +106,7 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
                             it.longitude.removePrefix("?").toDouble()
                         ), it.address, "Marker in ${it._id}"
                     )
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
                     null
                 }
