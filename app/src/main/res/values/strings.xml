@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Taipei Trash</string>
+    <string name="app_name" translatable="false">Taipei Trash</string>
     <string name="android">Android</string>
     <string name="hello">Hello %1$s!</string>
 </resources>
