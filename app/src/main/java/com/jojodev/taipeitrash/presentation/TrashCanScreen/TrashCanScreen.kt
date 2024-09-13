@@ -1,17 +1,11 @@
 package com.jojodev.taipeitrash.presentation.TrashCanScreen
 
 import android.util.Log
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -19,12 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.clustering.ClusterItem
@@ -32,33 +21,28 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jojodev.taipeitrash.ApiStatus
-import com.jojodev.taipeitrash.Greeting
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
-import com.jojodev.taipeitrash.MainViewModel
-import com.jojodev.taipeitrash.R
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
-fun TrashCanScreen(onButtonClick: () -> Unit, uiStatus: ApiStatus, res: List<TrashCan>) {
+fun TrashCanScreen(onButtonClick: (Boolean) -> Unit, uiStatus: ApiStatus, res: List<TrashCan>) {
     Column {
         Text("TrashCanScreen")
 
         when (uiStatus) {
             ApiStatus.LOADING -> {
-                IndeterminateCircularIndicator { onButtonClick() }
+                IndeterminateCircularIndicator(false) { onButtonClick(it) }
             }
 
             ApiStatus.ERROR -> {
+                IndeterminateCircularIndicator(false) { onButtonClick(it) }
                 Text(
                     text = "ERROR",
                     modifier = Modifier.padding(16.dp)
                 )
-                IndeterminateCircularIndicator { onButtonClick() }
             }
 
             ApiStatus.DONE -> {

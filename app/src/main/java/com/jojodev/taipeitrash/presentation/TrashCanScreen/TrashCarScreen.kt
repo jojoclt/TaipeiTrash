@@ -20,18 +20,14 @@ import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
 fun TrashCarScreen(
-    onButtonClick: () -> Unit,
-    onClearClick: () -> Unit,
+    onButtonClick: (Boolean) -> Unit,
     uiStatus: ApiStatus,
     res: List<TrashCan>,
     importDate: String
 ) {
     Column {
-        Button(onClick = { onClearClick() }) {
-            Text("Clear Data")
-        }
         NewComposable(
-            onButtonClick = onButtonClick,
+            onButtonClick = { onButtonClick(it) },
             uiStatus = uiStatus,
             res = res.filter { it.address.isNotEmpty() },
             importDate = importDate
@@ -41,7 +37,7 @@ fun TrashCarScreen(
 
 @Composable
 fun NewComposable(
-    onButtonClick: () -> Unit,
+    onButtonClick: (Boolean) -> Unit,
     uiStatus: ApiStatus,
     res: List<TrashCan>,
     importDate: String
@@ -52,24 +48,37 @@ fun NewComposable(
                 name = stringResource(R.string.android),
                 modifier = Modifier.padding(innerPadding)
             )
+
             when (uiStatus) {
                 ApiStatus.LOADING -> {
-                    IndeterminateCircularIndicator { onButtonClick() }
+                    IndeterminateCircularIndicator(false) {
+                        onButtonClick(it)
+                    }
                 }
+
                 ApiStatus.ERROR -> {
+                    IndeterminateCircularIndicator(false) {
+                        onButtonClick(it)
+                    }
                     Text(
                         text = "ERROR",
                         modifier = Modifier.padding(innerPadding)
                     )
-                    IndeterminateCircularIndicator { onButtonClick() }
                 }
+
                 ApiStatus.DONE -> {
                     Log.i("TrashCanScreen", res.size.toString())
+                    Button(onClick = { onButtonClick(false) }) {
+                        Text("RESET")
+                    }
                     Text(
                         text = res.size.toString(),
                         modifier = Modifier.padding(innerPadding)
                     )
-                    Text(text = "Date Imported: ${importDate.substring(0,10)}", modifier = Modifier.padding(innerPadding))
+                    Text(
+                        text = "Date Imported: ${importDate.substring(0, 10)}",
+                        modifier = Modifier.padding(innerPadding)
+                    )
                     LazyColumn {
 //                        val res = viewModel.response!!.result.trashCans
                         items(res) {

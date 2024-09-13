@@ -6,13 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.data.TrashCan
 import com.jojodev.taipeitrash.data.TrashResults
 import com.jojodev.taipeitrash.data.network.TrashApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 //https://stackoverflow.com/questions/67128991/android-get-response-status-code-using-retrofit-and-coroutines
-class MainViewModel: ViewModel() {
-//    var uistate by mutableStateOf<ApiStatus>(ApiStatus.LOADING)
+class MainViewModel : ViewModel() {
+    //    var uistate by mutableStateOf<ApiStatus>(ApiStatus.LOADING)
 //        private set
 //
 //    var response by mutableStateOf<TrashResults?>(null)
@@ -25,7 +26,7 @@ class MainViewModel: ViewModel() {
     private val _uistate: MutableStateFlow<ApiStatus> = MutableStateFlow(ApiStatus.LOADING)
     val uistate = _uistate.asStateFlow()
 
-    private val _response = MutableStateFlow<TrashResults?> (null)
+    private val _response = MutableStateFlow<TrashResults?>(null)
     val response = _response.asStateFlow()
 
     private val _trashCan = MutableStateFlow(emptyList<TrashCan>())
@@ -33,6 +34,8 @@ class MainViewModel: ViewModel() {
 
     private val _importDate = MutableStateFlow("")
     val importDate = _importDate.asStateFlow()
+
+    private var fetchDataJob: Job? = null
 
 //    val importDate: StateFlow<String>
 //    field = MutableStateFlow("")
@@ -45,6 +48,7 @@ class MainViewModel: ViewModel() {
     fun getTrashCan() {
         viewModelScope.launch {
             try {
+                _uistate.value = ApiStatus.LOADING
                 val listResult = TrashApi.retrofitService.getTrashCan()
                 _response.value = listResult
                 _uistate.value = ApiStatus.DONE
@@ -56,14 +60,15 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun getAllTrashCans() {
-        viewModelScope.launch {
+    fun getAllTrashCans(): Job {
+        return viewModelScope.launch {
             var offset = 0
             val list = mutableListOf<TrashCan>()
             val limit = 1000
             var count = -1
             do {
                 try {
+                    _uistate.value = ApiStatus.LOADING
                     val listResult = TrashApi.retrofitService.getTrashCan(offset = offset)
                     if (count < 0) {
                         if (listResult.result.count == 0) {
@@ -87,6 +92,15 @@ class MainViewModel: ViewModel() {
         }
     }
 
+    fun fetchData() {
+        fetchDataJob?.cancel()
+        fetchDataJob = getAllTrashCans()
+    }
+    fun cancelFetchData() {
+        fetchDataJob?.cancel()
+        clearTrashCan()
+        Log.i("MainViewModel", "cancelFetchData: Job cancelled")
+    }
 
     private fun getMarsPhotos() {
 //        viewModelScope.launch {
@@ -114,7 +128,7 @@ class MainViewModel: ViewModel() {
 }
 
 sealed class ApiStatus {
-    data object LOADING: ApiStatus()
-    data object ERROR: ApiStatus()
-    data object DONE: ApiStatus()
+    data object LOADING : ApiStatus()
+    data object ERROR : ApiStatus()
+    data object DONE : ApiStatus()
 }

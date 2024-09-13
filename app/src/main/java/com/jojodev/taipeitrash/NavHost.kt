@@ -19,9 +19,17 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Composable
-fun MainNavigation(navController: NavHostController, startDestination: Routes = Routes.TrashCanScreen, modifier: Modifier = Modifier) {
+fun MainNavigation(
+    navController: NavHostController,
+    startDestination: Routes = Routes.TrashCanScreen,
+    modifier: Modifier = Modifier
+) {
 //    val viewModel: MainViewModel = viewModel()
-    NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier
+    ) {
         composable<Routes.TrashCanScreen> {
             val parent = remember(it) {
                 navController.getBackStackEntry(Routes.TrashCanScreen)
@@ -32,7 +40,10 @@ fun MainNavigation(navController: NavHostController, startDestination: Routes = 
 //            why collectasstatewithlifecycle is better...
 
             TrashCanScreen(
-                onButtonClick = viewModel::getAllTrashCans, // or { viewModel.getTrashCan() }
+                onButtonClick = { status ->
+                    if (status) viewModel.fetchData()
+                    else viewModel.cancelFetchData()
+                },
                 uiStatus = uiStatus,
                 res = trashCan
             )
@@ -47,8 +58,10 @@ fun MainNavigation(navController: NavHostController, startDestination: Routes = 
             val importDate by viewModel.importDate.collectAsStateWithLifecycle()
 
             TrashCarScreen(
-                onButtonClick = { viewModel.getAllTrashCans() },
-                onClearClick = { viewModel.clearTrashCan() },
+                onButtonClick = { status ->
+                    if (status) viewModel.fetchData()
+                    else viewModel.cancelFetchData()
+                },
                 uiStatus = uiStatus,
                 res = trashCan,
                 importDate = importDate
@@ -66,7 +79,7 @@ sealed class Routes(val name: String, @Contextual val icon: ImageVector) {
     }
 
     @Serializable
-    data object TrashCarScreen: Routes("Car", Icons.Filled.Info) {
+    data object TrashCarScreen : Routes("Car", Icons.Filled.Info) {
     }
 //    @Serializable
 //    data class TrashCanDetailScreen(val trashLoc: TrashCan) : Routes()
