@@ -4,9 +4,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,9 +19,13 @@ import kotlinx.serialization.Serializable
 
 @Composable
 fun MainNavigation(navController: NavHostController, startDestination: Routes = Routes.TrashCanScreen, modifier: Modifier = Modifier) {
-    val viewModel: MainViewModel = viewModel()
+//    val viewModel: MainViewModel = viewModel()
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         composable<Routes.TrashCanScreen> {
+            val parent = remember(it) {
+                navController.getBackStackEntry(Routes.TrashCanScreen)
+            }
+            val viewModel: MainViewModel = viewModel(parent)
             TrashCanScreen(
                 onButtonClick = viewModel::getAllTrashCans, // or { viewModel.getTrashCan() }
                 uiStatus = viewModel.uistate,
@@ -27,6 +33,10 @@ fun MainNavigation(navController: NavHostController, startDestination: Routes = 
             )
         }
         composable<Routes.TrashCarScreen> {
+            val parent = remember(it) {
+                navController.getBackStackEntry(Routes.TrashCanScreen)
+            }
+            val viewModel: MainViewModel = viewModel(parent)
             TrashCarScreen(
                 onButtonClick = { viewModel.getAllTrashCans() },
                 uiStatus = viewModel.uistate,

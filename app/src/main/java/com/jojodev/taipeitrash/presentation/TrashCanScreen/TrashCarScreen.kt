@@ -30,7 +30,7 @@ fun TrashCarScreen(
         NewComposable(
             onButtonClick = onButtonClick,
             uiStatus = uiStatus,
-            res = res,
+            res = res.filter { it.address.isNotEmpty() },
             importDate = importDate
         )
     }
