@@ -1,10 +1,9 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize") // needed only for non-primitive classes
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 
 }
 
@@ -25,15 +24,15 @@ android {
         }
 
         //load the values from .properties file
-        val mapsKeyFile = project.rootProject.file("local.properties")
-        val properties = Properties()
-        properties.load(mapsKeyFile.inputStream())
-
-        //fetch the map key
-                val apiKey = properties.getProperty("MAPS_API_KEY") ?: ""
-
-        //inject the key dynamically into the manifest
-                manifestPlaceholders["GOOGLE_KEY"] = apiKey
+//        val mapsKeyFile = project.rootProject.file("local.properties")
+//        val properties = Properties()
+//        properties.load(mapsKeyFile.inputStream())
+//
+//        //fetch the map key
+//                val apiKey = properties.getProperty("MAPS_API_KEY") ?: ""
+//
+//        //inject the key dynamically into the manifest
+//                manifestPlaceholders["GOOGLE_KEY"] = apiKey
     }
 
     buildTypes {
@@ -54,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"

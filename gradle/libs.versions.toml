@@ -16,6 +16,7 @@ retrofit = "2.10.0"
 moshi = "1.15.1"
 mapsCompose = "6.1.1"
 composeMaterial = "1.6.8"
+secretsGradlePlugin = "2.0.1"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -41,6 +42,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 google-maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 google-maps-compose-utils = { module = "com.google.maps.android:maps-compose-utils", version.ref = "mapsCompose" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "composeMaterial" }
+secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

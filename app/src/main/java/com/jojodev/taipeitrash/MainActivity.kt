@@ -2,7 +2,7 @@ package com.jojodev.taipeitrash
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -34,11 +34,12 @@ import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 // Use AppCompatActivity instead of ComponentActivity for Android 12 and lower to support language switching (AppCompat API)
 class MainActivity : AppCompatActivity() {
 
-    val viewModel by viewModels<MainViewModel>()
+//    val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
+//        val apiKey = BuildConfig.apiKey
+        enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
             val items = listOf(
