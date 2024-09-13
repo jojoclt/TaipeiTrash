@@ -1,18 +1,26 @@
 package com.jojodev.taipeitrash.presentation.TrashCanScreen
 
+import android.Manifest
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -29,9 +37,11 @@ import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
 fun TrashCanScreen(onButtonClick: (Boolean) -> Unit, uiStatus: ApiStatus, res: List<TrashCan>) {
+    var locationAccess by remember {
+        mutableStateOf(false)
+    }
     Column {
         Text("TrashCanScreen")
-
         when (uiStatus) {
             ApiStatus.LOADING -> {
                 IndeterminateCircularIndicator(false) { onButtonClick(it) }
@@ -46,12 +56,77 @@ fun TrashCanScreen(onButtonClick: (Boolean) -> Unit, uiStatus: ApiStatus, res: L
             }
 
             ApiStatus.DONE -> {
+
                 Log.i("TrashCanScreen", res.size.toString())
-                TrashCanMap(trashCan = res)
+                if (!locationAccess) {
+                    RequestMultiplePermissions {
+                        locationAccess = it
+                        Log.v("TrashCanScreen", "RequestMultiplePermissions")
+                        if (it) {
+                            Log.v("TrashCanScreen", "RequestMultiplePermissions: true")
+                        } else {
+                            Log.v("TrashCanScreen", "RequestMultiplePermissions: false")
+                        }
+                    }
+                }
+
+                if (locationAccess) {
+                    TrashCanMap(res)
+                }
+                else {
+                    Text("Location Access Denied")
+                }
             }
         }
     }
 }
+
+@Composable
+fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
+    // State to store whether all permissions are granted
+    val permissionsGranted = remember { mutableStateMapOf<String, Boolean>() }
+//    Despite using "remember", it does not persist, it will get destroyed when changing screen, but persist across the same composable recompositions.
+
+    // Permission launcher for multiple permissions
+    val multiplePermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        // Callback when the result is received
+        permissionsGranted.putAll(permissions)
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Button to request multiple permissions
+        Button(onClick = {
+            // Launch the permission request for multiple permissions
+            multiplePermissionsLauncher.launch(
+                arrayOf(
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        }) {
+            Text("Request Camera & Location Permissions")
+        }
+
+
+        permissionsGranted[Manifest.permission.ACCESS_FINE_LOCATION]?.let { permissions(it) }
+
+        // Display the permission states
+        permissionsGranted.forEach { (permission, granted) ->
+            Text(
+                text = "$permission: ${if (granted) "Granted" else "Denied"}",
+                color = if (granted) Color.Green else Color.Red
+            )
+            Log.i("RequestMultiplePermissions", "$permission: ${if (granted) "Granted" else "Denied"}")
+        }
+    }
+}
+
 
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
