@@ -35,7 +35,19 @@ android {
 //                manifestPlaceholders["GOOGLE_KEY"] = apiKey
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+
+        }
+    }
     buildTypes {
+        debug {
+          signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
