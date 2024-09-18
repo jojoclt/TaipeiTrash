@@ -5,13 +5,13 @@ import com.squareup.moshi.JsonClass
 import kotlinx.serialization.Serializable
 
 @JsonClass(generateAdapter = true)
-data class TrashResults(
-    val result: Result
+data class TrashCanResults(
+    val result: TrashCanResult
 )
 
 @Serializable
 @JsonClass(generateAdapter = true)
-data class Result(
+data class TrashCanResult(
     val count: Int,
     val limit: Int,
     val offset: Int,

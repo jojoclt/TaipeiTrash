@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.data.TrashCan
-import com.jojodev.taipeitrash.data.TrashResults
+import com.jojodev.taipeitrash.data.TrashCanResults
 import com.jojodev.taipeitrash.data.network.TrashApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ class MainViewModel : ViewModel() {
     private val _uistate: MutableStateFlow<ApiStatus> = MutableStateFlow(ApiStatus.LOADING)
     val uistate = _uistate.asStateFlow()
 
-    private val _response = MutableStateFlow<TrashResults?>(null)
+    private val _response = MutableStateFlow<TrashCanResults?>(null)
     val response = _response.asStateFlow()
 
     private val _trashCan = MutableStateFlow(emptyList<TrashCan>())

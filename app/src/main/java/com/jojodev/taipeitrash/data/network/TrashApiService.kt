@@ -1,8 +1,7 @@
 package com.jojodev.taipeitrash.data.network
 
-import com.jojodev.taipeitrash.data.TrashCan
-import com.jojodev.taipeitrash.data.TrashResults
-import com.squareup.moshi.JsonReader
+import com.jojodev.taipeitrash.data.TrashCanResults
+import com.jojodev.taipeitrash.data.TrashCarResults
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit
@@ -28,7 +27,14 @@ interface TrashApiService {
         @Query("offset") offset: Int = 0,
         @Query("limit") limit: Int = 1000,
         @Query("scope") scope: String = "resourceAquire"
-    ): TrashResults
+    ): TrashCanResults
+
+    @GET("a6e90031-7ec4-4089-afb5-361a4efe7202")
+    suspend fun getTrashCar(
+        @Query("offset") offset: Int = 0,
+        @Query("limit") limit: Int = 1000,
+        @Query("scope") scope: String = "resourceAquire"
+    ): TrashCarResults
 }
 
 object TrashApi {
