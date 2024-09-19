@@ -142,7 +142,7 @@ fun TrashCanMap(trashCan: List<TrashCan> = emptyList(), onBoundsChange: (LatLngB
 
     var filteredTrashCan = trashCan.filter { it.address.isNotEmpty() }
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(taipeiMain, 10f)
+        position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
     var mapProperties by remember {
         mutableStateOf(
@@ -177,9 +177,8 @@ fun TrashCanMap(trashCan: List<TrashCan> = emptyList(), onBoundsChange: (LatLngB
                         false
                     }
                     }
-                Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-                Log.i("TrashCanMap", cameraPositionState.position.zoom.toString())
             }
+            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
         }
     }
     Box {
@@ -210,7 +209,7 @@ fun TrashCanMap(trashCan: List<TrashCan> = emptyList(), onBoundsChange: (LatLngB
 
             }
 
-            Clustering(items = trashMarker)
+            Clustering(items = trashMarker.filter { cameraPositionState.projection?.visibleRegion?.latLngBounds?.contains(it.getPosition()) == true })
         }
         ScaleBar(
             modifier = Modifier
