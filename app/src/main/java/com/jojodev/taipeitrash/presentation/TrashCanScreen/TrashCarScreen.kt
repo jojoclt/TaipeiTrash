@@ -87,7 +87,7 @@ fun NewComposable(
                                 modifier = Modifier.padding(innerPadding)
                             )
                             Text(
-                                text = "${it.latitude}, ${it.longitude}",
+                                text = "${it._id} ${it.latitude}, ${it.longitude}",
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }

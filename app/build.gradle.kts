@@ -97,6 +97,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.google.maps.compose)
     implementation(libs.google.maps.compose.utils)
+    implementation(libs.google.maps.compose.widgets)
     implementation(libs.androidx.compose.material)
 
     testImplementation(libs.junit)

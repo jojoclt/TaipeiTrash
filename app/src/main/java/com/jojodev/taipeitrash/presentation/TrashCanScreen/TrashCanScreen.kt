@@ -5,14 +5,15 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -31,6 +33,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.ApiStatus
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.data.TrashCan
@@ -71,9 +74,10 @@ fun TrashCanScreen(onButtonClick: (Boolean) -> Unit, uiStatus: ApiStatus, res: L
                 }
 
                 if (locationAccess) {
-                    TrashCanMap(res)
-                }
-                else {
+                    TrashCanMap(res) {
+                        Log.v("OnBoundChange", "OnBoundChange: $it")
+                    }
+                } else {
                     Text("Location Access Denied")
                 }
             }
@@ -122,7 +126,10 @@ fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
                 text = "$permission: ${if (granted) "Granted" else "Denied"}",
                 color = if (granted) Color.Green else Color.Red
             )
-            Log.i("RequestMultiplePermissions", "$permission: ${if (granted) "Granted" else "Denied"}")
+            Log.i(
+                "RequestMultiplePermissions",
+                "$permission: ${if (granted) "Granted" else "Denied"}"
+            )
         }
     }
 }
@@ -130,8 +137,10 @@ fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
 
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
-fun TrashCanMap(trashCan: List<TrashCan>) {
+fun TrashCanMap(trashCan: List<TrashCan> = emptyList(), onBoundsChange: (LatLngBounds?) -> Unit = {}) {
     val taipeiMain = LatLng(25.0330, 121.5654)
+
+    var filteredTrashCan = trashCan.filter { it.address.isNotEmpty() }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 10f)
     }
@@ -139,7 +148,7 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
         mutableStateOf(
             MapProperties(
 //                maxZoomPreference = 10f,
-                minZoomPreference = 10f,
+                minZoomPreference = 12f,
                 isMyLocationEnabled = true
             )
         )
@@ -149,74 +158,66 @@ fun TrashCanMap(trashCan: List<TrashCan>) {
             MapUiSettings(mapToolbarEnabled = true)
         )
     }
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState,
-        uiSettings = mapUiSettings,
-        properties = mapProperties
-    ) {
-
-        val trashMarker = remember {
-            trashCan.mapNotNull {
-                try {
-                    MarkerItem(
-                        LatLng(
+    // whenever cameraPositionState.isMoving changes, launch a coroutine
+    //    to fire onBoundsChange. We'll report the visibleRegion
+    //    LatLngBounds
+    LaunchedEffect(cameraPositionState.isMoving) {
+        if (!cameraPositionState.isMoving) {
+            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+            onBoundsChange(
+                bounds
+            )
+            if (bounds != null) {
+                    filteredTrashCan = trashCan.filter { try {
+                        bounds.contains( LatLng(
                             it.latitude.removePrefix("?").toDouble(),
                             it.longitude.removePrefix("?").toDouble()
-                        ), it.address, "Marker in ${it._id}"
-                    )
-                } catch (e: Exception) {
-                    Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
-                    null
-                }
-            }.toMutableStateList()
-
+                        ))
+                    } catch (e: Exception) {
+                        false
+                    }
+                    }
+                Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
+                Log.i("TrashCanMap", cameraPositionState.position.zoom.toString())
+            }
         }
-//        else this foreach will run forever (cuz of recomposition?)
-//        LaunchedEffect(key1 = trashCan) {
-//            trashMarker.clear()
-//            trashCan.forEach {
-////                Log.v("TrashCanMap", "trashCan: ${it.address}")
-//                trashMarker.add(MarkerItem(LatLng(it.latitude, it.longitude), it.address, "Marker in ${it._id}"))
-//            }
-//            Log.v("TrashCanMap", "trashMarker: ${trashMarker.size}")
-//        }
-        Clustering(items = trashMarker)
     }
-}
+    Box {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            uiSettings = mapUiSettings,
+            properties = mapProperties,
+            onMapLoaded = {
+                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
+            }
+        ) {
 
+            val trashMarker = remember {
+                trashCan.mapNotNull {
+                    try {
+                        MarkerItem(
+                            LatLng(
+                                it.latitude.removePrefix("?").toDouble(),
+                                it.longitude.removePrefix("?").toDouble()
+                            ), it.address, "Marker in ${it._id}"
+                        )
+                    } catch (e: Exception) {
+                        Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
+                        null
+                    }
+                }.toMutableStateList()
 
-@OptIn(MapsComposeExperimentalApi::class)
-@Composable
-fun mapCompose() {
-    val hydePark = LatLng(51.508610, -0.163611)
-    val regentsPark = LatLng(51.531143, -0.159893)
-    val primroseHill = LatLng(51.539556, -0.16076088)
+            }
 
-    val crystalPalacePark = LatLng(51.42153, -0.05749)
-    val greenwichPark = LatLng(51.476688, 0.000130)
-    val lloydPark = LatLng(51.364188, -0.080703)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(hydePark, 10f)
-    }
-
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState
-    ) {
-
-        val parkMarkers = remember {
-            mutableStateListOf(
-                MarkerItem(hydePark, "Hyde Park", "Marker in hyde Park"),
-                MarkerItem(regentsPark, "Regents Park", "Marker in Regents Park"),
-                MarkerItem(primroseHill, "Primrose Hill", "Marker in Primrose Hill"),
-                MarkerItem(crystalPalacePark, "Crystal Palace", "Marker in Crystal Palace"),
-                MarkerItem(greenwichPark, "Greenwich Park", "Marker in Greenwich Park"),
-                MarkerItem(lloydPark, "Lloyd park", "Marker in Lloyd Park"),
-            )
+            Clustering(items = trashMarker)
         }
-
-        Clustering(items = parkMarkers)
+        ScaleBar(
+            modifier = Modifier
+                .padding(start = 5.dp, bottom = 15.dp)
+                .align(Alignment.BottomStart),
+            cameraPositionState = cameraPositionState
+        )
     }
 }
 

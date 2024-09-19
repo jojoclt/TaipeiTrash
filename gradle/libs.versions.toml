@@ -41,6 +41,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson"}
 google-maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 google-maps-compose-utils = { module = "com.google.maps.android:maps-compose-utils", version.ref = "mapsCompose" }
+google-maps-compose-widgets = { module = "com.google.maps.android:maps-compose-widgets", version.ref = "mapsCompose" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "composeMaterial" }
 secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 [plugins]
