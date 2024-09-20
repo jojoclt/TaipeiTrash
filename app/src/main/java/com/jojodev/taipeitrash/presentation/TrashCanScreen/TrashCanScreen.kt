@@ -39,20 +39,31 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.ApiStatus
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
+import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.TrashCanViewModel
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
 @Preview
-fun TrashCanScreen(viewModel: TrashCanViewModel = viewModel()) {
+fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
+    val viewModel = viewModel<TrashCanViewModel>()
 
     val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()
     val res by viewModel.trashCan.collectAsStateWithLifecycle()
 
-    var locationAccess by remember {
-        mutableStateOf(false)
+    val locationPermission by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionViewModel.setPermissionGranted(granted)
     }
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         when (uiStatus) {
             ApiStatus.LOADING -> {
                 IndeterminateCircularIndicator(loadStatus = true) {
@@ -74,81 +85,61 @@ fun TrashCanScreen(viewModel: TrashCanViewModel = viewModel()) {
             }
 
             ApiStatus.DONE -> {
+                if (!locationPermission) locationPermissionLauncher.launch(permissionViewModel.permission)
+                else TrashCanMap(res)
+            }
+        }
+    }
 
-                Log.i("TrashCanScreen", res.size.toString())
-                if (!locationAccess) {
-                    RequestMultiplePermissions {
-                        locationAccess = it
-                        Log.v("TrashCanScreen", "RequestMultiplePermissions")
-                        if (it) {
-                            Log.v("TrashCanScreen", "RequestMultiplePermissions: true")
-                        } else {
-                            Log.v("TrashCanScreen", "RequestMultiplePermissions: false")
-                        }
-                    }
-                }
+    @Composable
+    fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
 
-                if (locationAccess) {
-                    TrashCanMap(res) {
-                        Log.v("OnBoundChange", "OnBoundChange: $it")
-                    }
-                } else {
-                    Text("Location Access Denied")
-                }
+        // State to store whether all permissions are granted
+        val permissionsGranted = remember { mutableStateMapOf<String, Boolean>() }
+//    Despite using "remember", it does not persist, it will get destroyed when changing screen, but persist across the same composable recompositions.
+
+        val multiplePermissionsLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            // Callback when the result is received
+            permissionsGranted.putAll(permissions)
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Button to request multiple permissions
+            Button(onClick = {
+                // Launch the permission request for multiple permissions
+                multiplePermissionsLauncher.launch(
+                    arrayOf(
+//                    Manifest.permission.CAMERA,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }) {
+                Text("Request Camera & Location Permissions")
+            }
+
+
+            permissionsGranted[Manifest.permission.ACCESS_FINE_LOCATION]?.let { permissions(it) }
+
+            // Display the permission states
+            permissionsGranted.forEach { (permission, granted) ->
+                Text(
+                    text = "$permission: ${if (granted) "Granted" else "Denied"}",
+                    color = if (granted) Color.Green else Color.Red
+                )
+                Log.i(
+                    "RequestMultiplePermissions",
+                    "$permission: ${if (granted) "Granted" else "Denied"}"
+                )
             }
         }
     }
 }
-
-@Composable
-fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
-    // State to store whether all permissions are granted
-    val permissionsGranted = remember { mutableStateMapOf<String, Boolean>() }
-//    Despite using "remember", it does not persist, it will get destroyed when changing screen, but persist across the same composable recompositions.
-
-    // Permission launcher for multiple permissions
-    val multiplePermissionsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        // Callback when the result is received
-        permissionsGranted.putAll(permissions)
-    }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Button to request multiple permissions
-        Button(onClick = {
-            // Launch the permission request for multiple permissions
-            multiplePermissionsLauncher.launch(
-                arrayOf(
-//                    Manifest.permission.CAMERA,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
-        }) {
-            Text("Request Camera & Location Permissions")
-        }
-
-
-        permissionsGranted[Manifest.permission.ACCESS_FINE_LOCATION]?.let { permissions(it) }
-
-        // Display the permission states
-        permissionsGranted.forEach { (permission, granted) ->
-            Text(
-                text = "$permission: ${if (granted) "Granted" else "Denied"}",
-                color = if (granted) Color.Green else Color.Red
-            )
-            Log.i(
-                "RequestMultiplePermissions",
-                "$permission: ${if (granted) "Granted" else "Denied"}"
-            )
-        }
-    }
-}
-
 
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable

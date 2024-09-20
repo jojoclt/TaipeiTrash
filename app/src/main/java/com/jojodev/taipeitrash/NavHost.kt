@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -31,13 +32,15 @@ fun MainNavigation(
         modifier = modifier
     ) {
         composable<Routes.TrashCanScreen> {
+            val context = LocalContext.current
             val parent = remember(it) {
                 navController.getBackStackEntry(Routes.TrashCanScreen)
             }
-            val viewModel: TrashCanViewModel = viewModel(parent)
-//            val permissionViewModel: PermissionViewModel = viewModel(parent)
+            val permissionViewModel: PermissionViewModel = viewModel(parent) {
+                PermissionViewModel(context)
+            }
 
-            TrashCanScreen(viewModel)
+            TrashCanScreen(permissionViewModel)
         }
         composable<Routes.TrashCarScreen> {
             val parent = remember(it) {
