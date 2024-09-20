@@ -3,8 +3,11 @@ package com.jojodev.taipeitrash
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,9 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -111,30 +117,41 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun IndeterminateCircularIndicator(loadStatus: Boolean = false, onClick: (Boolean) -> Unit = {}) {
+fun IndeterminateCircularIndicator(loadStatus: Boolean = true, onClick: (Boolean) -> Unit = {}) {
     var loading by remember { mutableStateOf(loadStatus) }
 
-    Button(onClick = {
-        loading = !loading
-        onClick(loading)
-    }) {
-        if (!loading) Text("Start loading")
-        else Text("Stop loading")
+    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Box(modifier = Modifier.padding(16.dp).size(64.dp)) {
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(64.dp),
+                    color = MaterialTheme.colorScheme.secondary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            }
+        }
+
+
+        Button(onClick = {
+            loading = !loading
+            onClick(loading)
+        }) {
+            if (!loading) Text("Start loading")
+            else Text("Stop loading")
+        }
     }
-
-    if (!loading) return
-
-    CircularProgressIndicator(
-        modifier = Modifier.width(64.dp),
-        color = MaterialTheme.colorScheme.secondary,
-        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-    )
 }
 
 @Preview(showBackground = true)
 @Composable
-fun IndeterminateCircularIndicatorPreview() {
+fun IndeterminateCircularIndicatorPreview(@PreviewParameter(BooleanPreviewParameterProvider::class) loadStatus: Boolean) {
     TaipeiTrashTheme {
-        IndeterminateCircularIndicator()
+        IndeterminateCircularIndicator(loadStatus)
     }
+}
+
+class BooleanPreviewParameterProvider : PreviewParameterProvider<Boolean> {
+    override val values = sequenceOf(
+        true, false
+    )
 }

@@ -4,63 +4,36 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.data.TrashCan
-import com.jojodev.taipeitrash.data.TrashCanResults
 import com.jojodev.taipeitrash.data.network.TrashApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 //https://stackoverflow.com/questions/67128991/android-get-response-status-code-using-retrofit-and-coroutines
-class MainViewModel : ViewModel() {
-    //    var uistate by mutableStateOf<ApiStatus>(ApiStatus.LOADING)
-//        private set
-//
-//    var response by mutableStateOf<TrashResults?>(null)
-//        private set
-//    var trashCan by mutableStateOf<List<TrashCan>>(listOf())
-//        private set
-//
-//    var importDate by mutableStateOf<String>("")
-//        private set
+class TrashCanViewModel : ViewModel() {
+
     private val _uistate: MutableStateFlow<ApiStatus> = MutableStateFlow(ApiStatus.LOADING)
     val uistate = _uistate.asStateFlow()
 
-    private val _response = MutableStateFlow<TrashCanResults?>(null)
-    val response = _response.asStateFlow()
-
     private val _trashCan = MutableStateFlow(emptyList<TrashCan>())
-    val trashCan = _trashCan.asStateFlow()
+    val trashCan = _trashCan
+        .onStart { fetchData() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            emptyList()
+        )
 
     private val _importDate = MutableStateFlow("")
     val importDate = _importDate.asStateFlow()
 
     private var fetchDataJob: Job? = null
 
-//    val importDate: StateFlow<String>
-//    field = MutableStateFlow("")
-
-//    init {
-//        Log.v("MainViewModel", "init")
-//        getTrashCan()
-//    }
-
-    fun getTrashCan() {
-        viewModelScope.launch {
-            try {
-                _uistate.value = ApiStatus.LOADING
-                val listResult = TrashApi.retrofitService.getTrashCan()
-                _response.value = listResult
-                _uistate.value = ApiStatus.DONE
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "getTrash: ${e.message}")
-                _response.value = null
-                _uistate.value = ApiStatus.ERROR
-            }
-        }
-    }
-
-    fun getAllTrashCans(): Job {
+    private fun getAllTrashCans(): Job {
         return viewModelScope.launch {
             var offset = 0
             val list = mutableListOf<TrashCan>()
@@ -95,25 +68,13 @@ class MainViewModel : ViewModel() {
     fun fetchData() {
         fetchDataJob?.cancel()
         fetchDataJob = getAllTrashCans()
+        Log.i("MainViewModel", "fetchData: Job started")
     }
+
     fun cancelFetchData() {
         fetchDataJob?.cancel()
         clearTrashCan()
         Log.i("MainViewModel", "cancelFetchData: Job cancelled")
-    }
-
-    private fun getMarsPhotos() {
-//        viewModelScope.launch {
-//            try {
-//                val listResult = MarsApi.retrofitService.getPhotos()
-//                uistate = ApiStatus.DONE
-//               list = listResult
-//            } catch (e: Exception) {
-//                Log.e("MainViewModel", "getMarsPhotos: ${e.message}")
-//                uistate = ApiStatus.ERROR
-//                list = listOf()
-//            }
-//        }
     }
 
     override fun onCleared() {

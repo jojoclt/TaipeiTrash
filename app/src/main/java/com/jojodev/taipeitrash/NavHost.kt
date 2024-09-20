@@ -34,25 +34,16 @@ fun MainNavigation(
             val parent = remember(it) {
                 navController.getBackStackEntry(Routes.TrashCanScreen)
             }
-            val viewModel: MainViewModel = viewModel(parent)
-            val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()
-            val trashCan by viewModel.trashCan.collectAsStateWithLifecycle()
-//            why collectasstatewithlifecycle is better...
+            val viewModel: TrashCanViewModel = viewModel(parent)
+//            val permissionViewModel: PermissionViewModel = viewModel(parent)
 
-            TrashCanScreen(
-                onButtonClick = { status ->
-                    if (status) viewModel.fetchData()
-                    else viewModel.cancelFetchData()
-                },
-                uiStatus = uiStatus,
-                res = trashCan
-            )
+            TrashCanScreen(viewModel)
         }
         composable<Routes.TrashCarScreen> {
             val parent = remember(it) {
                 navController.getBackStackEntry(Routes.TrashCanScreen)
             }
-            val viewModel: MainViewModel = viewModel(parent)
+            val viewModel: TrashCanViewModel = viewModel(parent)
             val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()
             val trashCan by viewModel.trashCan.collectAsStateWithLifecycle()
             val importDate by viewModel.importDate.collectAsStateWithLifecycle()
