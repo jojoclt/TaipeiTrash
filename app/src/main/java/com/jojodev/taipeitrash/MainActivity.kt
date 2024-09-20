@@ -1,5 +1,8 @@
 package com.jojodev.taipeitrash
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -155,4 +158,14 @@ class BooleanPreviewParameterProvider : PreviewParameterProvider<Boolean> {
         true, false
     )
 }
+
+fun Context.findAndroidActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
+}
+
 

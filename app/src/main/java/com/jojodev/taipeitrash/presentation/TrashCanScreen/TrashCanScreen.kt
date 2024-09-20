@@ -1,6 +1,10 @@
 package com.jojodev.taipeitrash.presentation.TrashCanScreen
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,8 +26,10 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
@@ -85,8 +91,23 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
             }
 
             ApiStatus.DONE -> {
-                if (!locationPermission) locationPermissionLauncher.launch(permissionViewModel.permission)
-                else TrashCanMap(res)
+                Log.i("PermissionViewModel", "locationPermission: $locationPermission")
+                if (!locationPermission) {
+                    locationPermissionLauncher.launch(permissionViewModel.permission)
+                    val activity = LocalContext.current as Activity
+                    if (!shouldShowRequestPermissionRationale(
+                            activity,
+                            permissionViewModel.permission
+                        )
+                    ) {
+                        Text("Please enable location permission in settings")
+                        Button(onClick = {
+                            activity.openAppSettings()
+                        }) {
+                            Text("Enable Location Permission")
+                        }
+                    }
+                } else TrashCanMap(res)
             }
         }
     }
@@ -253,4 +274,10 @@ data class MarkerItem(
 
     override fun getZIndex(): Float =
         itemZIndex
+}
+fun Activity.openAppSettings() {
+    Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", packageName, null)
+    ).also(::startActivity)
 }
