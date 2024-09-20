@@ -8,12 +8,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 
 class PermissionViewModel(context: Context) : ViewModel() {
 
     val permission = Manifest.permission.ACCESS_FINE_LOCATION
+
+    private val _isLaunchedOnce = MutableStateFlow(false)
+    val isLaunchedOnce = _isLaunchedOnce.asStateFlow()
 
     private val _permissionGranted = MutableStateFlow(false)
     val permissionGranted = _permissionGranted.onStart { getPermissionEnabled(context, permission) }
@@ -25,6 +29,10 @@ class PermissionViewModel(context: Context) : ViewModel() {
 
     fun setPermissionGranted(granted: Boolean) {
         _permissionGranted.value = granted
+    }
+
+    fun setLaunchedOnce(launched: Boolean) {
+        _isLaunchedOnce.value = launched
     }
 
     private fun getPermissionEnabled(context: Context, permission: String): Boolean =

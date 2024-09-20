@@ -15,7 +15,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jojodev.taipeitrash.presentation.TrashCanScreen.TrashCanScreen
-import com.jojodev.taipeitrash.presentation.TrashCanScreen.TrashCarScreen
+import com.jojodev.taipeitrash.presentation.TrashCanScreen.TrashCarListScreen
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -42,7 +42,7 @@ fun MainNavigation(
 
             TrashCanScreen(permissionViewModel)
         }
-        composable<Routes.TrashCarScreen> {
+        composable<Routes.TrashCarListScreen> {
             val parent = remember(it) {
                 navController.getBackStackEntry(Routes.TrashCanScreen)
             }
@@ -51,7 +51,7 @@ fun MainNavigation(
             val trashCan by viewModel.trashCan.collectAsStateWithLifecycle()
             val importDate by viewModel.importDate.collectAsStateWithLifecycle()
 
-            TrashCarScreen(
+            TrashCarListScreen(
                 onButtonClick = { status ->
                     if (status) viewModel.fetchData()
                     else viewModel.cancelFetchData()
@@ -73,7 +73,7 @@ sealed class Routes(val name: String, @Contextual val icon: ImageVector) {
     }
 
     @Serializable
-    data object TrashCarScreen : Routes("Car", Icons.Filled.Info) {
+    data object TrashCarListScreen : Routes("Car", Icons.Filled.Info) {
     }
 //    @Serializable
 //    data class TrashCanDetailScreen(val trashLoc: TrashCan) : Routes()

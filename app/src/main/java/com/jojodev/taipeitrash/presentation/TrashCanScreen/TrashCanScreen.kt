@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
     val res by viewModel.trashCan.collectAsStateWithLifecycle()
 
     val locationPermission by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
+    val isLaunchedOnce by permissionViewModel.isLaunchedOnce.collectAsStateWithLifecycle()
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -93,7 +95,10 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
             ApiStatus.DONE -> {
                 Log.i("PermissionViewModel", "locationPermission: $locationPermission")
                 if (!locationPermission) {
-                    locationPermissionLauncher.launch(permissionViewModel.permission)
+                    if (!isLaunchedOnce) {
+                        permissionViewModel.setLaunchedOnce(true)
+                        SideEffect { locationPermissionLauncher.launch(permissionViewModel.permission) }
+                    }
                     val activity = LocalContext.current as Activity
                     if (!shouldShowRequestPermissionRationale(
                             activity,

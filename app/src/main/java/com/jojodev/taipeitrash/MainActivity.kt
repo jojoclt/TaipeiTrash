@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             val navController = rememberNavController()
             val items = listOf(
                 Routes.TrashCanScreen,
-                Routes.TrashCarScreen,
+                Routes.TrashCarListScreen,
             )
             TaipeiTrashTheme {
                 var selected by remember { mutableStateOf(0) }

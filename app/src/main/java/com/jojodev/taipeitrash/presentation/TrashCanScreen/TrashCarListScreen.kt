@@ -19,7 +19,7 @@ import com.jojodev.taipeitrash.R
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
-fun TrashCarScreen(
+fun TrashCarListScreen(
     onButtonClick: (Boolean) -> Unit,
     uiStatus: ApiStatus,
     res: List<TrashCan>,
