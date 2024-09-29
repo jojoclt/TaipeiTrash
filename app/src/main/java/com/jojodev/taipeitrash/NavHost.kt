@@ -14,8 +14,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.jojodev.taipeitrash.presentation.TrashCanScreen.TrashCanScreen
-import com.jojodev.taipeitrash.presentation.TrashCanScreen.TrashCarListScreen
+import com.jojodev.taipeitrash.TrashCanScreen.TrashCanViewModel
+import com.jojodev.taipeitrash.TrashCanScreen.presentation.TrashCanScreen
+import com.jojodev.taipeitrash.TrashCanScreen.presentation.TrashCarListScreen
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -44,7 +45,7 @@ fun MainNavigation(
         }
         composable<Routes.TrashCarListScreen> {
             val parent = remember(it) {
-                navController.getBackStackEntry(Routes.TrashCanScreen)
+                navController.getBackStackEntry(Routes.TrashCarListScreen)
             }
             val viewModel: TrashCanViewModel = viewModel(parent)
             val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()

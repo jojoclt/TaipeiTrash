@@ -1,4 +1,4 @@
-package com.jojodev.taipeitrash.presentation.TrashCanScreen
+package com.jojodev.taipeitrash.TrashCanScreen.presentation
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
@@ -12,10 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.jojodev.taipeitrash.ApiStatus
 import com.jojodev.taipeitrash.Greeting
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.R
+import com.jojodev.taipeitrash.TrashCanScreen.ApiStatus
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable

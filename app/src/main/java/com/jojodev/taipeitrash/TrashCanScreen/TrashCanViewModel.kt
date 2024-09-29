@@ -1,4 +1,4 @@
-package com.jojodev.taipeitrash
+package com.jojodev.taipeitrash.TrashCanScreen
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -33,6 +33,9 @@ class TrashCanViewModel : ViewModel() {
 
     private var fetchDataJob: Job? = null
 
+    init {
+        Log.v("MainViewModel", "init")
+    }
     private fun getAllTrashCans(): Job {
         return viewModelScope.launch {
             var offset = 0

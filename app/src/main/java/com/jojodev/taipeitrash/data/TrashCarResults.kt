@@ -15,7 +15,7 @@ data class TrashCarResult(
     val count: Int,
     val limit: Int,
     val offset: Int,
-    val results: List<TrashCar>,
+    val trashCars: List<TrashCar>,
     val sort: String
 )
 

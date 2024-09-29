@@ -1,4 +1,4 @@
-package com.jojodev.taipeitrash.presentation.TrashCanScreen
+package com.jojodev.taipeitrash.TrashCanScreen.presentation
 
 import android.Manifest
 import android.app.Activity
@@ -44,10 +44,10 @@ import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.widgets.ScaleBar
-import com.jojodev.taipeitrash.ApiStatus
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
-import com.jojodev.taipeitrash.TrashCanViewModel
+import com.jojodev.taipeitrash.TrashCanScreen.ApiStatus
+import com.jojodev.taipeitrash.TrashCanScreen.TrashCanViewModel
 import com.jojodev.taipeitrash.data.TrashCan
 
 @Composable
