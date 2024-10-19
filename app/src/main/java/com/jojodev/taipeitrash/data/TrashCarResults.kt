@@ -1,16 +1,14 @@
 package com.jojodev.taipeitrash.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TrashCarResults(
     val result: TrashCarResult
 )
 
 @Serializable
-@JsonClass(generateAdapter = true)
 data class TrashCarResult(
     val count: Int,
     val limit: Int,
@@ -20,31 +18,30 @@ data class TrashCarResult(
 )
 
 @Serializable
-@JsonClass(generateAdapter = true)
 data class TrashCar(
     val _id: Int,
     val _importdate: Importdate,
-    @Json(name = "分隊")
+    @SerialName("分隊")
     val unit: String,
-    @Json(name = "地點")
+    @SerialName("地點")
     val location: String,
     val 局編: String,
-    @Json(name = "抵達時間")
+    @SerialName("抵達時間")
     val arriveTime: String,
-    @Json(name = "經度")
+    @SerialName("經度")
     val longitude: String,
-    @Json(name = "緯度")
+    @SerialName("緯度")
     val latitude: String,
-    @Json(name = "行政區")
+    @SerialName("行政區")
     val district: String,
-    @Json(name = "路線")
+    @SerialName("路線")
     val line: String,
-    @Json(name = "車次")
+    @SerialName("車次")
     val carNo: String,
-    @Json(name = "車號")
+    @SerialName("車號")
     val carPlate: String,
     val 里別: String,
-    @Json(name = "離開時間")
+    @SerialName("離開時間")
     val departTime: String
 )
 

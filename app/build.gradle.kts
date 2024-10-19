@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
-    id("kotlin-parcelize") // needed only for non-primitive classes
+    alias(libs.plugins.compose.compiler)
+
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 
 }
@@ -90,9 +91,8 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.scalars)
-    implementation(libs.retrofit.converter.moshi)
-    implementation(libs.moshi.kotlin)
+    implementation(libs.converter.kotlinx.serialization)
+    implementation(libs.okhttp)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.google.maps.compose)

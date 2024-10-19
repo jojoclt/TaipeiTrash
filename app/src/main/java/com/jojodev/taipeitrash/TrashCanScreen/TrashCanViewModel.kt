@@ -40,6 +40,7 @@ class TrashCanViewModel : ViewModel() {
         return viewModelScope.launch {
             var offset = 0
             val list = mutableListOf<TrashCan>()
+            _uistate.value = ApiStatus.DONE
             val limit = 1000
             var count = -1
             do {

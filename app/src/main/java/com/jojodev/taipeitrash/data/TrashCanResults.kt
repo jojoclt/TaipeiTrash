@@ -1,45 +1,41 @@
 package com.jojodev.taipeitrash.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TrashCanResults(
     val result: TrashCanResult
 )
 
 @Serializable
-@JsonClass(generateAdapter = true)
 data class TrashCanResult(
     val count: Int,
     val limit: Int,
     val offset: Int,
-    @Json(name = "results")
+    @SerialName("results")
     val trashCans: List<TrashCan>,
     val sort: String
 )
 
 @Serializable
-@JsonClass(generateAdapter = true)
 data class TrashCan(
     val _id: Int,
     val _importdate: Importdate,
-    @Json(name = "備註")
+    @SerialName("備註")
     val remark: String,
-    @Json(name = "地址")
+    @SerialName("地址")
     val address: String,
-    @Json(name = "經度")
+    @SerialName("經度")
     val longitude: String,
-    @Json(name = "緯度")
+    @SerialName("緯度")
     val latitude: String,
-    @Json(name = "行政區")
+    @SerialName("行政區")
     val district: String
 )
 //2024-08-22 13:15:11.877  E  getAllTrashCans: Expected a double but was ?121.595369 at path $.result.results[113].經度
 
 @Serializable
-@JsonClass(generateAdapter = true)
 data class Importdate(
     val date: String,
     val timezone: String,
