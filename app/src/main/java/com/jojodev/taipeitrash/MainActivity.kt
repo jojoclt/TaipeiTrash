@@ -49,12 +49,12 @@ class MainActivity : AppCompatActivity() {
 //        val apiKey = BuildConfig.apiKey
 //        enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
-            val items = listOf(
-                Routes.TrashCanScreen,
-                Routes.TrashCarListScreen,
-            )
             TaipeiTrashTheme {
+                val navController = rememberNavController()
+                val items = listOf(
+                    Routes.TrashCanScreen,
+                    Routes.TrashCarScreen,
+                )
                 var selected by remember { mutableStateOf(0) }
                 Scaffold(
                     bottomBar = {

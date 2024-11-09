@@ -1,4 +1,4 @@
-package com.jojodev.taipeitrash.data
+package com.jojodev.taipeitrash.core.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,6 +13,7 @@ data class TrashCarResult(
     val count: Int,
     val limit: Int,
     val offset: Int,
+    @SerialName("results")
     val trashCars: List<TrashCar>,
     val sort: String
 )

@@ -1,4 +1,4 @@
-package com.jojodev.taipeitrash.data
+package com.jojodev.taipeitrash.core.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

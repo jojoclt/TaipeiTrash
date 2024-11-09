@@ -1,11 +1,11 @@
-package com.jojodev.taipeitrash.data.network
+package com.jojodev.taipeitrash.core.data.network
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import com.jojodev.taipeitrash.data.TrashCanResults
-import com.jojodev.taipeitrash.data.TrashCarResults
+import com.jojodev.taipeitrash.core.data.TrashCanResults
+import com.jojodev.taipeitrash.core.data.TrashCarResults
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit

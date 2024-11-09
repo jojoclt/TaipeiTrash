@@ -1,4 +1,4 @@
-package com.jojodev.taipeitrash.TrashCanScreen.presentation
+package com.jojodev.taipeitrash.trashcar.presentation
 
 import android.Manifest
 import android.app.Activity
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -46,17 +45,16 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
-import com.jojodev.taipeitrash.TrashCanScreen.ApiStatus
-import com.jojodev.taipeitrash.TrashCanScreen.TrashCanViewModel
-import com.jojodev.taipeitrash.data.TrashCan
+import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.core.data.TrashCar
+import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 
 @Composable
 @Preview
-fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
-    val viewModel = viewModel<TrashCanViewModel>()
+fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
+    val viewModel = viewModel<TrashCarViewModel>()
 
-    val uiStatus by viewModel.uistate.collectAsStateWithLifecycle()
-    val res by viewModel.trashCan.collectAsStateWithLifecycle()
+    val uiStatus by viewModel.uiState.collectAsStateWithLifecycle()
 
     val locationPermission by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
     val isLaunchedOnce by permissionViewModel.isLaunchedOnce.collectAsStateWithLifecycle()
@@ -72,8 +70,8 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        when (uiStatus) {
-            ApiStatus.LOADING -> {
+        when (val s = uiStatus) {
+            Results.Loading -> {
                 IndeterminateCircularIndicator(loadStatus = true) {
                     when (it) {
                         true -> viewModel.fetchData()
@@ -82,8 +80,10 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                 }
             }
 
-            ApiStatus.ERROR -> {
+            is Results.Error -> {
                 Text("Error")
+                Log.e("TrashCarScreen", s.toString())
+
                 IndeterminateCircularIndicator(loadStatus = false) {
                     when (it) {
                         true -> viewModel.fetchData()
@@ -92,7 +92,9 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                 }
             }
 
-            ApiStatus.DONE -> {
+            is Results.Success -> {
+                val data = s.data
+                Log.i("TrashCarScreen", "data: $data")
                 Log.i("PermissionViewModel", "locationPermission: $locationPermission")
                 if (!locationPermission) {
                     if (!isLaunchedOnce) {
@@ -112,7 +114,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                             Text("Enable Location Permission")
                         }
                     }
-                } else TrashCanMap(res)
+                } else TrashCarMap(data)
             }
         }
     }
@@ -166,16 +168,15 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         }
     }
 }
-
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
-fun TrashCanMap(
-    trashCan: List<TrashCan> = emptyList(),
+fun TrashCarMap(
+    trashCar: List<TrashCar> = emptyList(),
     onBoundsChange: (LatLngBounds?) -> Unit = {}
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
 
-    var filteredTrashCan = trashCan.filter { it.address.isNotEmpty() }
+//    var filteredTrashCan = trashCar.filter { it.address.isNotEmpty() }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
@@ -196,29 +197,24 @@ fun TrashCanMap(
     // whenever cameraPositionState.isMoving changes, launch a coroutine
     //    to fire onBoundsChange. We'll report the visibleRegion
     //    LatLngBounds
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-            onBoundsChange(
-                bounds
-            )
-            if (bounds != null) {
-                filteredTrashCan = trashCan.filter {
-                    try {
-                        bounds.contains(
-                            LatLng(
-                                it.latitude.removePrefix("?").toDouble(),
-                                it.longitude.removePrefix("?").toDouble()
-                            )
-                        )
-                    } catch (e: Exception) {
-                        false
-                    }
-                }
-            }
-            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-        }
-    }
+//    LaunchedEffect(cameraPositionState.isMoving) {
+//        if (!cameraPositionState.isMoving) {
+//            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+//            onBoundsChange(
+//                bounds
+//            )
+//            if (bounds != null) {
+//                filteredTrashCan = trashCan.filter {
+//                    try {
+//
+//                    } catch (e: Exception) {
+//                        false
+//                    }
+//                }
+//            }
+//            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
+//        }
+//    }
     Box {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -231,13 +227,13 @@ fun TrashCanMap(
         ) {
 
             val trashMarker = remember {
-                trashCan.mapNotNull {
+                trashCar.mapNotNull {
                     try {
                         MarkerItem(
                             LatLng(
                                 it.latitude.removePrefix("?").toDouble(),
                                 it.longitude.removePrefix("?").toDouble()
-                            ), it.address, "Marker in ${it._id}"
+                            ), it.carNo, "Marker in ${it._id}"
                         )
                     } catch (e: Exception) {
                         Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
@@ -246,7 +242,6 @@ fun TrashCanMap(
                 }.toMutableStateList()
 
             }
-
             Clustering(items = trashMarker.filter {
                 cameraPositionState.projection?.visibleRegion?.latLngBounds?.contains(
                     it.getPosition()
