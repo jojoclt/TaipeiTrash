@@ -175,7 +175,7 @@ fun TrashCanMap(
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
 
-    var filteredTrashCan = trashCan.filter { it.address.isNotEmpty() }
+    var filteredTrashCan by remember { mutableStateOf(trashCan) }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
@@ -247,10 +247,19 @@ fun TrashCanMap(
 
             }
 
-            Clustering(items = trashMarker.filter {
-                cameraPositionState.projection?.visibleRegion?.latLngBounds?.contains(
-                    it.getPosition()
-                ) == true
+            Clustering(items = filteredTrashCan.mapNotNull {
+                try {
+                    MarkerItem(
+                        LatLng(
+                            it.latitude.removePrefix("?").toDouble(),
+                            it.longitude.removePrefix("?").toDouble()
+                        ), it.address, "Marker in ${it._id}"
+                    )
+                }
+                catch (e: Exception) {
+                    Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
+                    null
+                }
             })
         }
         ScaleBar(

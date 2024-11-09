@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -176,7 +177,7 @@ fun TrashCarMap(
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
 
-//    var filteredTrashCan = trashCar.filter { it.address.isNotEmpty() }
+    var filteredTrashCar by remember { mutableStateOf(trashCar) }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
@@ -194,27 +195,29 @@ fun TrashCarMap(
             MapUiSettings(mapToolbarEnabled = true)
         )
     }
-    // whenever cameraPositionState.isMoving changes, launch a coroutine
-    //    to fire onBoundsChange. We'll report the visibleRegion
-    //    LatLngBounds
-//    LaunchedEffect(cameraPositionState.isMoving) {
-//        if (!cameraPositionState.isMoving) {
-//            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-//            onBoundsChange(
-//                bounds
-//            )
-//            if (bounds != null) {
-//                filteredTrashCan = trashCan.filter {
-//                    try {
-//
-//                    } catch (e: Exception) {
-//                        false
-//                    }
-//                }
-//            }
-//            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-//        }
-//    }
+
+    LaunchedEffect(cameraPositionState.isMoving) {
+        if (!cameraPositionState.isMoving) {
+            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+            onBoundsChange(
+                bounds
+            )
+            if (bounds != null) {
+                filteredTrashCar = trashCar.filter {
+                    try {
+                        bounds.contains(
+                            LatLng(
+                                it.latitude.removePrefix("?").toDouble(),
+                                it.longitude.removePrefix("?").toDouble()
+                            )
+                        )
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+        }
+    }
     Box {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -242,10 +245,19 @@ fun TrashCarMap(
                 }.toMutableStateList()
 
             }
-            Clustering(items = trashMarker.filter {
-                cameraPositionState.projection?.visibleRegion?.latLngBounds?.contains(
-                    it.getPosition()
-                ) == true
+            Clustering(items = filteredTrashCar.mapNotNull {
+                try {
+                    MarkerItem(
+                        LatLng(
+                            it.latitude.removePrefix("?").toDouble(),
+                            it.longitude.removePrefix("?").toDouble()
+                        ), it.carNo, "Marker in ${it._id}"
+                    )
+                }
+                catch (e: Exception) {
+                    Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
+                    null
+                }
             })
         }
         ScaleBar(
