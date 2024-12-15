@@ -4,8 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.core.data.TrashCar
-import com.jojodev.taipeitrash.core.data.network.TrashApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,14 +47,14 @@ class TrashCarViewModel : ViewModel() {
         offset: Int = 0,
         limit: Int = 1000,
     ): List<TrashCar> {
-        val listResult = TrashApi.retrofitService.getTrashCar(offset = offset, limit = limit).result
-        if (listResult.count == 0 && offset == 0) {
-            throw Exception("No data")
-        }
-        var result = listResult.trashCars
-        if (offset + limit < listResult.count)
-            result = result + fetchAllTrashCars(offset + limit, limit)
-        return result
+//        val listResult = TrashApi.retrofitService.getTrashCar(offset = offset, limit = limit).result
+//        if (listResult.count == 0 && offset == 0) {
+//            throw Exception("No data")
+//        }
+//        var result = listResult.trashCars
+//        if (offset + limit < listResult.count)
+//            result = result + fetchAllTrashCars(offset + limit, limit)
+        return emptyList()
     }
 
     fun fetchData() {

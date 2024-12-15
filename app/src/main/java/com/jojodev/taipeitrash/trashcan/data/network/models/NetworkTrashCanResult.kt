@@ -1,10 +1,10 @@
-package com.jojodev.taipeitrash.core.data
+package com.jojodev.taipeitrash.trashcan.data.network.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TrashCanResults(
+data class NetworkTrashCanResult(
     val result: TrashCanResult
 )
 
@@ -14,12 +14,12 @@ data class TrashCanResult(
     val limit: Int,
     val offset: Int,
     @SerialName("results")
-    val trashCans: List<TrashCan>,
+    val trashCans: List<NetworkTrashCan>,
     val sort: String
 )
 
 @Serializable
-data class TrashCan(
+data class NetworkTrashCan(
     val _id: Int,
     val _importdate: Importdate,
     @SerialName("備註")

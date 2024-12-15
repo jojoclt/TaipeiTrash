@@ -1,10 +1,11 @@
-package com.jojodev.taipeitrash.core.data
+package com.jojodev.taipeitrash.trashcar
 
+import com.jojodev.taipeitrash.trashcan.data.network.models.Importdate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TrashCarResults(
+data class NetworkTrashCar(
     val result: TrashCarResult
 )
 

@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.ksp)
+    alias(libs.plugins.hilt.android)
+
 
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 
@@ -112,4 +114,8 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.dagger.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
 }

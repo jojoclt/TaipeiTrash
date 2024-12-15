@@ -4,8 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.core.data.TrashCan
-import com.jojodev.taipeitrash.core.data.network.TrashApi
+import com.jojodev.taipeitrash.trashcan.data.TrashCan
+import com.jojodev.taipeitrash.trashcan.data.TrashCanRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,9 +14,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 //https://stackoverflow.com/questions/67128991/android-get-response-status-code-using-retrofit-and-coroutines
-class TrashCanViewModel : ViewModel() {
+@HiltViewModel
+class TrashCanViewModel @Inject constructor(private val trashCanRepository: TrashCanRepository) : ViewModel() {
     private val _uiState = MutableStateFlow<Results<List<TrashCan>>>(Results.Loading)
     val uiState = _uiState.onStart { fetchData() }.stateIn(
         viewModelScope,
@@ -38,29 +41,12 @@ class TrashCanViewModel : ViewModel() {
         return viewModelScope.launch {
             try {
                 _uiState.value = Results.Loading
-                val results = fetchAllTrashCans(offset = 0, limit = 1000)
-                _importDate.value = results[0]._importdate.date
+                val results = trashCanRepository.getTrashCans()
                 _uiState.value = Results.Success(results)
             } catch (e: Exception) {
                 _uiState.value = Results.Error(e)
             }
         }
-    }
-
-    private suspend fun fetchAllTrashCans(
-        offset: Int = 0,
-        limit: Int = 1000,
-    ): List<TrashCan> {
-        Log.i("TrashCanViewModel", "FetchAllTrashCans: offset=$offset, limit=$limit")
-
-        val listResult = TrashApi.retrofitService.getTrashCan(offset = offset, limit = limit).result
-        if (listResult.count == 0 && offset == 0) {
-            throw Exception("No data")
-        }
-        var result = listResult.trashCans
-        if (offset + limit < listResult.count)
-            result = result + fetchAllTrashCans(offset + limit, limit)
-        return result
     }
 
     fun fetchData() {

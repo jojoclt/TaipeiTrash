@@ -4,8 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,12 +37,12 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 
 // Use AppCompatActivity instead of ComponentActivity for Android 12 and lower to support language switching (AppCompat API)
-class MainActivity : AppCompatActivity() {
-
-//    val viewModel by viewModels<MainViewModel>()
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

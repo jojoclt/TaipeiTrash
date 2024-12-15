@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
@@ -47,13 +48,15 @@ import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.core.data.TrashCan
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
+import com.jojodev.taipeitrash.trashcan.data.TrashCan
+import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
+import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
 
 @Composable
 @Preview
 fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
-    val viewModel = viewModel<TrashCanViewModel>()
+    val viewModel = hiltViewModel<TrashCanViewModel>()
 
     val uiStatus by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -94,6 +97,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 
             is Results.Success -> {
                 val data = s.data
+                Log.d("TrashCanScreen", "data: ${data.size}")
                 Log.i("PermissionViewModel", "locationPermission: $locationPermission")
                 if (!locationPermission) {
                     if (!isLaunchedOnce) {
@@ -176,6 +180,7 @@ fun TrashCanMap(
     val taipeiMain = LatLng(25.0330, 121.5654)
 
     var filteredTrashCan by remember { mutableStateOf(trashCan) }
+    Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
@@ -203,20 +208,23 @@ fun TrashCanMap(
                 bounds
             )
             if (bounds != null) {
-                filteredTrashCan = trashCan.filter {
-                    try {
-                        bounds.contains(
-                            LatLng(
-                                it.latitude.removePrefix("?").toDouble(),
-                                it.longitude.removePrefix("?").toDouble()
-                            )
-                        )
-                    } catch (e: Exception) {
-                        false
-                    }
-                }
+                filteredTrashCan = trashCan
+                Log.d("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
             }
-            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
+//                filteredTrashCan = trashCan.filter {
+//                    try {
+//                        bounds.contains(
+//                            LatLng(
+//                                it.latitude.removePrefix("?").toDouble(),
+//                                it.longitude.removePrefix("?").toDouble()
+//                            )
+//                        )
+//                    } catch (e: Exception) {
+//                        false
+//                    }
+//                }
+//            }
+//            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
         }
     }
     Box {
@@ -237,10 +245,10 @@ fun TrashCanMap(
                             LatLng(
                                 it.latitude.removePrefix("?").toDouble(),
                                 it.longitude.removePrefix("?").toDouble()
-                            ), it.address, "Marker in ${it._id}"
+                            ), it.address, "Marker in ${it.id}"
                         )
                     } catch (e: Exception) {
-                        Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
+                        Log.e("TrashCanMap", "Error Converting at idx ${it.id}\n $it")
                         null
                     }
                 }.toMutableStateList()
@@ -253,11 +261,11 @@ fun TrashCanMap(
                         LatLng(
                             it.latitude.removePrefix("?").toDouble(),
                             it.longitude.removePrefix("?").toDouble()
-                        ), it.address, "Marker in ${it._id}"
+                        ), it.address, "Marker in ${it.id}"
                     )
                 }
                 catch (e: Exception) {
-                    Log.e("TrashCanMap", "Error Converting at idx ${it._id}\n $it")
+                    Log.e("TrashCanMap", "Error Converting at idx ${it.id}\n $it")
                     null
                 }
             })

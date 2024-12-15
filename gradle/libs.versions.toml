@@ -1,7 +1,9 @@
 [versions]
 agp = "8.6.1"
 converterKotlinxSerialization = "2.11.0"
-kotlin = "2.0.21"
+hiltNavigationCompose = "1.2.0"
+kotlin = "2.1.0"
+hilt = "2.52"
 navigationCompose = "2.8.5"
 kotlinxSerializationJson = "1.7.3"
 kotlinxSerialization = "2.0.21"
@@ -22,9 +24,12 @@ secretsGradlePlugin = "2.0.1"
 ksp = "2.1.0-1.0.29"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+dagger-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "converterKotlinxSerialization" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -55,3 +60,5 @@ jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = 
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinxSerialization" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+

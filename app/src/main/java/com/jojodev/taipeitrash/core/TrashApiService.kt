@@ -1,27 +1,13 @@
-package com.jojodev.taipeitrash.core.data.network
+package com.jojodev.taipeitrash.core
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import com.jojodev.taipeitrash.core.data.TrashCanResults
-import com.jojodev.taipeitrash.core.data.TrashCarResults
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.jojodev.taipeitrash.trashcan.data.network.models.NetworkTrashCanResult
+import com.jojodev.taipeitrash.trashcar.NetworkTrashCar
 import retrofit2.http.GET
 import retrofit2.http.Query
-
-private const val BASE_URL =
-    "https://data.taipei/api/v1/dataset/"
-
-private val retrofit = Retrofit.Builder()
-    .baseUrl(BASE_URL)
-    .addConverterFactory(
-        Json.asConverterFactory(
-            "application/json; charset=UTF8".toMediaType()))
-    .build()
 
 interface TrashApiService {
     @GET("267d550f-c6ec-46e0-b8af-fd5a464eb098")
@@ -29,20 +15,14 @@ interface TrashApiService {
         @Query("offset") offset: Int = 0,
         @Query("limit") limit: Int = 1000,
         @Query("scope") scope: String = "resourceAquire"
-    ): TrashCanResults
+    ): NetworkTrashCanResult
 
     @GET("a6e90031-7ec4-4089-afb5-361a4efe7202")
     suspend fun getTrashCar(
         @Query("offset") offset: Int = 0,
         @Query("limit") limit: Int = 1000,
         @Query("scope") scope: String = "resourceAquire"
-    ): TrashCarResults
-}
-
-object TrashApi {
-    val retrofitService: TrashApiService by lazy {
-        retrofit.create(TrashApiService::class.java)
-    }
+    ): NetworkTrashCar
 }
 
 private fun isInternetAvailable(context: Context): Boolean {

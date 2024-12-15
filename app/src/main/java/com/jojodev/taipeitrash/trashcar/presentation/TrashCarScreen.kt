@@ -47,7 +47,7 @@ import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.core.data.TrashCar
+import com.jojodev.taipeitrash.trashcar.TrashCar
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 
 @Composable
