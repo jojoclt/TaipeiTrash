@@ -12,11 +12,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -29,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,7 +41,6 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
@@ -171,6 +167,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         }
     }
 }
+
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun TrashCanMap(
@@ -188,53 +185,57 @@ fun TrashCanMap(
         mutableStateOf(
             MapProperties(
 //                maxZoomPreference = 10f,
-                minZoomPreference = 12f,
+//                minZoomPreference = 12f,
                 isMyLocationEnabled = true
             )
         )
     }
     var mapUiSettings by remember {
         mutableStateOf(
-            MapUiSettings(mapToolbarEnabled = true)
+            MapUiSettings(mapToolbarEnabled = false)
         )
     }
     // whenever cameraPositionState.isMoving changes, launch a coroutine
     //    to fire onBoundsChange. We'll report the visibleRegion
     //    LatLngBounds
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-            onBoundsChange(
-                bounds
-            )
-            if (bounds != null) {
-                filteredTrashCan = trashCan
-                Log.d("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-            }
-//                filteredTrashCan = trashCan.filter {
-//                    try {
-//                        bounds.contains(
-//                            LatLng(
-//                                it.latitude.removePrefix("?").toDouble(),
-//                                it.longitude.removePrefix("?").toDouble()
-//                            )
-//                        )
-//                    } catch (e: Exception) {
-//                        false
-//                    }
-//                }
+//    LaunchedEffect(cameraPositionState.isMoving) {
+//        if (!cameraPositionState.isMoving) {
+//            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+//            onBoundsChange(
+//                bounds
+//            )
+//            if (bounds != null) {
+//                filteredTrashCan = trashCan
+//                Log.d("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
 //            }
-//            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-        }
-    }
+////                filteredTrashCan = trashCan.filter {
+////                    try {
+////                        bounds.contains(
+////                            LatLng(
+////                                it.latitude.removePrefix("?").toDouble(),
+////                                it.longitude.removePrefix("?").toDouble()
+////                            )
+////                        )
+////                    } catch (e: Exception) {
+////                        false
+////                    }
+////                }
+////            }
+////            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
+//        }
+//    }
     Box {
+//        Box(modifier = Modifier.fillMaxSize().zIndex(2f)) {
+//            Text("TrashCanMap")
+//            Text(trashCan.toString())
+//        }
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             uiSettings = mapUiSettings,
             properties = mapProperties,
             onMapLoaded = {
-                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
+//                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
             }
         ) {
 
@@ -254,29 +255,21 @@ fun TrashCanMap(
                 }.toMutableStateList()
 
             }
-
-            Clustering(items = filteredTrashCan.mapNotNull {
-                try {
-                    MarkerItem(
-                        LatLng(
-                            it.latitude.removePrefix("?").toDouble(),
-                            it.longitude.removePrefix("?").toDouble()
-                        ), it.address, "Marker in ${it.id}"
-                    )
-                }
-                catch (e: Exception) {
-                    Log.e("TrashCanMap", "Error Converting at idx ${it.id}\n $it")
-                    null
-                }
-            })
+            val items = trashCan.map {
+                MarkerItem(
+                    LatLng(
+                        it.latitude.toDouble(),
+                        it.longitude.toDouble()
+                    ), it.address, "Marker in ${it.id}"
+                )
+            }
+            Log.d("TrashCanMap", "mappeditems: ${items.size}")
+//
+//        }
+            Clustering(items = items)
         }
-        ScaleBar(
-            modifier = Modifier
-                .padding(start = 5.dp, bottom = 15.dp)
-                .align(Alignment.BottomStart),
-            cameraPositionState = cameraPositionState
-        )
     }
+
 }
 
 data class MarkerItem(
@@ -297,6 +290,7 @@ data class MarkerItem(
     override fun getZIndex(): Float =
         itemZIndex
 }
+
 fun Activity.openAppSettings() {
     Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

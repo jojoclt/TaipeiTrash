@@ -18,8 +18,8 @@ fun NetworkTrashCan.asEntity() =
         importDate = _importdate.date,
         remark = remark,
         address = address,
-        longitude = latitude,
-        latitude = longitude,
+        longitude = longitude,
+        latitude = latitude,
         district = district
     )
 
