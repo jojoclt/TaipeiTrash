@@ -1,30 +1,40 @@
 package com.jojodev.taipeitrash.trashcan.presentation
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
@@ -46,15 +56,25 @@ import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
+
 //import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
 //import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
     val viewModel = hiltViewModel<TrashCanViewModel>()
 
     val uiStatus by viewModel.uiState.collectAsStateWithLifecycle()
+    val collectDate by viewModel.importDate.collectAsStateWithLifecycle("")
+
+    val context = LocalContext.current
+    LaunchedEffect(collectDate) {
+        if (collectDate.isNotEmpty())
+            Toast.makeText(context, collectDate, Toast.LENGTH_SHORT).show()
+    }
+
 
     val locationPermission by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
     val isLaunchedOnce by permissionViewModel.isLaunchedOnce.collectAsStateWithLifecycle()
@@ -65,11 +85,26 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         permissionViewModel.setPermissionGranted(granted)
     }
 
+
+    val infiniteTransition = rememberInfiniteTransition()
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0F,
+        targetValue = 360F,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing)
+        )
+    )
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+//        verticalArrangement = Arrangement.Center
     ) {
+        CenterAlignedTopAppBar(title = { Text("Trash Can") }, actions = {
+            IconButton({}, modifier = Modifier.graphicsLayer { rotationZ = angle }) {
+                Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+            }
+        })
         when (val s = uiStatus) {
             Results.Loading -> {
                 IndeterminateCircularIndicator(loadStatus = true) {
@@ -92,6 +127,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
             }
 
             is Results.Success -> {
+
                 val data = s.data
                 Log.d("TrashCanScreen", "data: ${data.size}")
                 Log.i("PermissionViewModel", "locationPermission: $locationPermission")
@@ -118,54 +154,6 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         }
     }
 
-    @Composable
-    fun RequestMultiplePermissions(permissions: (Boolean) -> Unit) {
-
-        // State to store whether all permissions are granted
-        val permissionsGranted = remember { mutableStateMapOf<String, Boolean>() }
-//    Despite using "remember", it does not persist, it will get destroyed when changing screen, but persist across the same composable recompositions.
-
-        val multiplePermissionsLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            // Callback when the result is received
-            permissionsGranted.putAll(permissions)
-        }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Button to request multiple permissions
-            Button(onClick = {
-                // Launch the permission request for multiple permissions
-                multiplePermissionsLauncher.launch(
-                    arrayOf(
-//                    Manifest.permission.CAMERA,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
-            }) {
-                Text("Request Camera & Location Permissions")
-            }
-
-
-            permissionsGranted[Manifest.permission.ACCESS_FINE_LOCATION]?.let { permissions(it) }
-
-            // Display the permission states
-            permissionsGranted.forEach { (permission, granted) ->
-                Text(
-                    text = "$permission: ${if (granted) "Granted" else "Denied"}",
-                    color = if (granted) Color.Green else Color.Red
-                )
-                Log.i(
-                    "RequestMultiplePermissions",
-                    "$permission: ${if (granted) "Granted" else "Denied"}"
-                )
-            }
-        }
-    }
 }
 
 @OptIn(MapsComposeExperimentalApi::class)

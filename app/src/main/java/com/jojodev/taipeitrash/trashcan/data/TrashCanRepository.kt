@@ -16,23 +16,28 @@ class TrashCanRepository @Inject constructor(
         var results = emptyList<TrashCan>()
 //        check network is available
 //        catch in vm
+        withContext(Dispatchers.IO) {
+            results = localDataSource.getTrashCan().map { it.asExternalModel() }
+        }
+        if (results.isEmpty()) {
+            results = updateTrashCan()
+        }
+//        always get data from dao
+        return results
+    }
+
+    suspend fun updateTrashCan(): List<TrashCan> {
         try {
             val trashCans = networkDataSource.getTrashCans()
             withContext(Dispatchers.IO) {
                 localDataSource.updateTrash(trashCans.map { it.asEntity() })
             }
-
-        }
-        catch (e: IOException) {
+            return trashCans.map { it.asEntity().asExternalModel() }
+        } catch (e: IOException) {
             Log.e("Network Error", e.message.toString())
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("Error", e.message.toString())
         }
-        withContext(Dispatchers.IO) {
-            results = localDataSource.getTrashCan().map { it.asExternalModel() }
-        }
-//        always get data from dao
-        return results
+        return emptyList()
     }
 }

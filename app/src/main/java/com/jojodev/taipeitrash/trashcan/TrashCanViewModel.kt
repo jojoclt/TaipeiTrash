@@ -8,9 +8,10 @@ import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcan.data.TrashCanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ class TrashCanViewModel @Inject constructor(private val trashCanRepository: Tras
         Results.Loading
     )
 
-    private val _importDate = MutableStateFlow("")
-    val importDate = _importDate.asStateFlow()
+    private val _importDate = MutableSharedFlow<String>()
+    val importDate = _importDate.asSharedFlow()
 
     private var fetchDataJob: Job? = null
 
@@ -42,6 +43,7 @@ class TrashCanViewModel @Inject constructor(private val trashCanRepository: Tras
             try {
                 _uiState.value = Results.Loading
                 val results = trashCanRepository.getTrashCans()
+                _importDate.emit(results[0].importDate)
                 _uiState.value = Results.Success(results)
             } catch (e: Exception) {
                 _uiState.value = Results.Error(e)
