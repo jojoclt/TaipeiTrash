@@ -118,4 +118,8 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.dagger.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(platform(libs.okhttp.bom))
+
+    // define any required OkHttp artifacts without version
+    implementation(libs.okhttp3.okhttp)
 }

@@ -7,8 +7,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -24,8 +26,13 @@ object RetrofitModule {
     @Singleton
     fun provideRetrofit(baseUrl: String): Retrofit {
         val networkJson = Json { ignoreUnknownKeys = true }
+
+        val client = OkHttpClient.Builder()
+            .readTimeout(120, TimeUnit.SECONDS)
+            .build()
         return Retrofit.Builder()
             .baseUrl(baseUrl)
+            .client(client)
             .addConverterFactory(
                 networkJson.asConverterFactory(
                 "application/json; charset=UTF8".toMediaType()))
