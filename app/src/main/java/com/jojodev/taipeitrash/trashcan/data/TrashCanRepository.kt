@@ -12,10 +12,13 @@ class TrashCanRepository @Inject constructor(
     private val networkDataSource: NetworkTrashCanDataSource,
     private val localDataSource: TrashCanDao
 ) {
-    suspend fun getTrashCans(): List<TrashCan> {
+    suspend fun getTrashCans(forceUpdate: Boolean = false): List<TrashCan> {
         var results = emptyList<TrashCan>()
 //        check network is available
 //        catch in vm
+        if (forceUpdate) {
+            return updateTrashCan()
+        }
         withContext(Dispatchers.IO) {
             results = localDataSource.getTrashCan().map { it.asExternalModel() }
         }

@@ -36,13 +36,13 @@ class TrashCanViewModel @Inject constructor(private val trashCanRepository: Tras
         Log.i("TrashCanViewModel", "init")
     }
 
-    private fun getAllTrashCans(): Job {
+    private fun getAllTrashCans(forceUpdate: Boolean = false): Job {
         Log.i("TrashCanViewModel", "getAllTrashCans")
 
         return viewModelScope.launch {
             try {
                 _uiState.value = Results.Loading
-                val results = trashCanRepository.getTrashCans()
+                val results = trashCanRepository.getTrashCans(forceUpdate)
                 _importDate.emit(results[0].importDate)
                 _uiState.value = Results.Success(results)
             } catch (e: Exception) {
@@ -51,9 +51,9 @@ class TrashCanViewModel @Inject constructor(private val trashCanRepository: Tras
         }
     }
 
-    fun fetchData() {
+    fun fetchData(forceUpdate: Boolean = false) {
         fetchDataJob?.cancel()
-        fetchDataJob = getAllTrashCans()
+        fetchDataJob = getAllTrashCans(forceUpdate)
         Log.i("TrashCanViewModel", "fetchData: Job started")
     }
 

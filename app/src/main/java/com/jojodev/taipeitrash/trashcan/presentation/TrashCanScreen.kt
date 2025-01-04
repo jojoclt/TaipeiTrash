@@ -101,7 +101,11 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 //        verticalArrangement = Arrangement.Center
     ) {
         CenterAlignedTopAppBar(title = { Text("Trash Can") }, actions = {
-            IconButton({}, modifier = Modifier.graphicsLayer { rotationZ = angle }) {
+            IconButton(
+                { viewModel.fetchData(forceUpdate = true) },
+                modifier = if (uiStatus is Results.Loading) Modifier.graphicsLayer {
+                    rotationZ = angle
+                } else Modifier) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
             }
         })
