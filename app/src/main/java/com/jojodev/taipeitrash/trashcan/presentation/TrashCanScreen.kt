@@ -46,8 +46,8 @@ import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
-import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
-import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
+//import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
+//import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
 
 @Composable
 @Preview

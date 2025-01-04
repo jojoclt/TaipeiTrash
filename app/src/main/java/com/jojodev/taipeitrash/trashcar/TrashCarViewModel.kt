@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.trashcar.data.network.models.TrashCarResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 
 //https://stackoverflow.com/questions/67128991/android-get-response-status-code-using-retrofit-and-coroutines
 class TrashCarViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<Results<List<TrashCar>>>(Results.Loading)
+    private val _uiState = MutableStateFlow<Results<List<TrashCarResult>>>(Results.Loading)
     val uiState = _uiState.onStart { fetchData() }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
@@ -32,21 +33,21 @@ class TrashCarViewModel : ViewModel() {
 
     private fun getAllTrashCars(): Job {
         return viewModelScope.launch {
-            try {
-                _uiState.value = Results.Loading
-                val results = fetchAllTrashCars(offset = 0, limit = 1000)
-                _importDate.value = results[0]._importdate.date
-                _uiState.value = Results.Success(results)
-            } catch (e: Exception) {
-                _uiState.value = Results.Error(e)
-            }
+//            try {
+//                _uiState.value = Results.Loading
+//                val results = fetchAllTrashCars(offset = 0, limit = 1000)
+//                _importDate.value = results[0]._importdate.date
+//                _uiState.value = Results.Success(results)
+//            } catch (e: Exception) {
+//                _uiState.value = Results.Error(e)
+//            }
         }
     }
 
     private suspend fun fetchAllTrashCars(
         offset: Int = 0,
         limit: Int = 1000,
-    ): List<TrashCar> {
+    ): List<TrashCarResult> {
 //        val listResult = TrashApi.retrofitService.getTrashCar(offset = offset, limit = limit).result
 //        if (listResult.count == 0 && offset == 0) {
 //            throw Exception("No data")

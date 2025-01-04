@@ -2,7 +2,7 @@ package com.jojodev.taipeitrash.core.di
 
 import android.content.Context
 import androidx.room.Room
-import com.jojodev.taipeitrash.trashcan.data.local.db.TrashCanDatabase
+import com.jojodev.taipeitrash.core.db.TrashDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,14 +15,18 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideTrashCanDatabase(@ApplicationContext applicationContext: Context) =
+    fun provideTrashDatabase(@ApplicationContext applicationContext: Context) =
         Room.databaseBuilder(
             applicationContext,
-            TrashCanDatabase::class.java,
+            TrashDatabase::class.java,
             "trash.db"
         ).build()
 
     @Provides
     @Singleton
-    fun provideTrashCanDao(database: TrashCanDatabase) = database.dao
+    fun provideTrashCanDao(database: TrashDatabase) = database.trashCanDao()
+
+    @Provides
+    @Singleton
+    fun provideTrashCarDao(database: TrashDatabase) = database.trashCarDao()
 }

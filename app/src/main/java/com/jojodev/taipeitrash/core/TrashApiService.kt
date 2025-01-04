@@ -5,7 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import com.jojodev.taipeitrash.trashcan.data.network.models.NetworkTrashCanResult
-import com.jojodev.taipeitrash.trashcar.NetworkTrashCar
+import com.jojodev.taipeitrash.trashcar.data.network.models.NetworkTrashCarResult
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -22,7 +22,7 @@ interface TrashApiService {
         @Query("offset") offset: Int = 0,
         @Query("limit") limit: Int = 1000,
         @Query("scope") scope: String = "resourceAquire"
-    ): NetworkTrashCar
+    ): NetworkTrashCarResult
 }
 
 private fun isInternetAvailable(context: Context): Boolean {
