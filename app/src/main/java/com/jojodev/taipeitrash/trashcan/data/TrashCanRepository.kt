@@ -31,7 +31,9 @@ class TrashCanRepository @Inject constructor(
 
     suspend fun updateTrashCan(): List<TrashCan> {
         try {
-            val trashCans = networkDataSource.getTrashCans()
+            val trashCans = networkDataSource.getTrashCans().filter {
+                it.latitude.toDoubleOrNull() != null && it.longitude.toDoubleOrNull() != null
+            }
             withContext(Dispatchers.IO) {
                 localDataSource.updateTrash(trashCans.map { it.asEntity() })
             }

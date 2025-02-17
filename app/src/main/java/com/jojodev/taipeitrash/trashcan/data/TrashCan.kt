@@ -8,8 +8,8 @@ data class TrashCan(
     val importDate: String,
     val remark: String,
     val address: String,
-    val latitude: String,
-    val longitude: String,
+    val latitude: Double,
+    val longitude: Double,
     val district: String
 )
 fun NetworkTrashCan.asEntity() =
@@ -18,8 +18,8 @@ fun NetworkTrashCan.asEntity() =
         importDate = _importdate.date,
         remark = remark,
         address = address,
-        longitude = longitude,
-        latitude = latitude,
+        longitude = longitude.toDouble(),
+        latitude = latitude.toDouble(),
         district = district
     )
 

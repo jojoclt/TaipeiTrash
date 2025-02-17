@@ -10,7 +10,7 @@ data class TrashCanEntity(
     val importDate: String,
     val remark: String,
     val address: String,
-    val longitude: String,
-    val latitude: String,
+    val longitude: Double,
+    val latitude: Double,
     val district: String
 )

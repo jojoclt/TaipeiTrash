@@ -31,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -230,28 +229,11 @@ fun TrashCanMap(
 //                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
             }
         ) {
-
-            val trashMarker = remember {
-                trashCan.mapNotNull {
-                    try {
-                        MarkerItem(
-                            LatLng(
-                                it.latitude.removePrefix("?").toDouble(),
-                                it.longitude.removePrefix("?").toDouble()
-                            ), it.address, "Marker in ${it.id}"
-                        )
-                    } catch (e: Exception) {
-                        Log.e("TrashCanMap", "Error Converting at idx ${it.id}\n $it")
-                        null
-                    }
-                }.toMutableStateList()
-
-            }
             val items = trashCan.map {
                 MarkerItem(
                     LatLng(
-                        it.latitude.toDouble(),
-                        it.longitude.toDouble()
+                        it.latitude,
+                        it.longitude
                     ), it.address, "Marker in ${it.id}"
                 )
             }
