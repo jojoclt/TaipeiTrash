@@ -4,26 +4,33 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.trashcar.data.network.models.TrashCarResult
+import com.jojodev.taipeitrash.trashcan.data.TrashCar
+import com.jojodev.taipeitrash.trashcar.data.TrashCarRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 //https://stackoverflow.com/questions/67128991/android-get-response-status-code-using-retrofit-and-coroutines
-class TrashCarViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<Results<List<TrashCarResult>>>(Results.Loading)
+@HiltViewModel
+class TrashCarViewModel @Inject constructor(private val trashCarRepository: TrashCarRepository) :
+    ViewModel() {
+    private val _uiState = MutableStateFlow<Results<List<TrashCar>>>(Results.Loading)
     val uiState = _uiState.onStart { fetchData() }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000L),
         Results.Loading
     )
 
-    private val _importDate = MutableStateFlow("")
-    val importDate = _importDate.asStateFlow()
+    private val _importDate = MutableSharedFlow<String>()
+    val importDate = _importDate.asSharedFlow()
+
 
     private var fetchDataJob: Job? = null
 
@@ -33,29 +40,15 @@ class TrashCarViewModel : ViewModel() {
 
     private fun getAllTrashCars(): Job {
         return viewModelScope.launch {
-//            try {
-//                _uiState.value = Results.Loading
-//                val results = fetchAllTrashCars(offset = 0, limit = 1000)
-//                _importDate.value = results[0]._importdate.date
-//                _uiState.value = Results.Success(results)
-//            } catch (e: Exception) {
-//                _uiState.value = Results.Error(e)
-//            }
+            try {
+                _uiState.value = Results.Loading
+                val results = trashCarRepository.getTrashCars()
+                _importDate.emit(results[0].importDate)
+                _uiState.value = Results.Success(results)
+            } catch (e: Exception) {
+                _uiState.value = Results.Error(e)
+            }
         }
-    }
-
-    private suspend fun fetchAllTrashCars(
-        offset: Int = 0,
-        limit: Int = 1000,
-    ): List<TrashCarResult> {
-//        val listResult = TrashApi.retrofitService.getTrashCar(offset = offset, limit = limit).result
-//        if (listResult.count == 0 && offset == 0) {
-//            throw Exception("No data")
-//        }
-//        var result = listResult.trashCars
-//        if (offset + limit < listResult.count)
-//            result = result + fetchAllTrashCars(offset + limit, limit)
-        return emptyList()
     }
 
     fun fetchData() {
@@ -66,7 +59,7 @@ class TrashCarViewModel : ViewModel() {
 
     fun cancelFetchData() {
         fetchDataJob?.cancel()
-        clearTrashCan()
+        clearTrashCar()
         Log.i("TrashCarViewModel", "cancelFetchData: Job cancelled")
     }
 
@@ -76,7 +69,7 @@ class TrashCarViewModel : ViewModel() {
         Log.v("TrashCarViewModel", "onCleared")
     }
 
-    private fun clearTrashCan() {
+    private fun clearTrashCar() {
         _uiState.value = Results.Loading
     }
 }

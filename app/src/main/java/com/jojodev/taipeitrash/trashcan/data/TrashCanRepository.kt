@@ -29,7 +29,7 @@ class TrashCanRepository @Inject constructor(
         return results
     }
 
-    suspend fun updateTrashCan(): List<TrashCan> {
+    private suspend fun updateTrashCan(): List<TrashCan> {
         try {
             val trashCans = networkDataSource.getTrashCans().filter {
                 it.latitude.toDoubleOrNull() != null && it.longitude.toDoubleOrNull() != null

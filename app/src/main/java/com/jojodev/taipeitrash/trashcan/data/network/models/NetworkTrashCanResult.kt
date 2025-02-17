@@ -1,5 +1,6 @@
 package com.jojodev.taipeitrash.trashcan.data.network.models
 
+import com.jojodev.taipeitrash.trashcar.data.network.models.Importdate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -32,12 +33,4 @@ data class NetworkTrashCan(
     val latitude: String,
     @SerialName("行政區")
     val district: String
-)
-//2024-08-22 13:15:11.877  E  getAllTrashCans: Expected a double but was ?121.595369 at path $.result.results[113].經度
-
-@Serializable
-data class Importdate(
-    val date: String,
-    val timezone: String,
-    val timezone_type: Int
 )

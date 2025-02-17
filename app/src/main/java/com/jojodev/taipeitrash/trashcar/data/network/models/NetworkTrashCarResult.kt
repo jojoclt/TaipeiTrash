@@ -5,39 +5,62 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class NetworkTrashCarResult(
+    @SerialName("result")
     val result: TrashCarResult
 )
 
 @Serializable
 data class TrashCarResult(
-    val count: Int,
+    @SerialName("limit")
     val limit: Int,
+    @SerialName("offset")
     val offset: Int,
+    @SerialName("count")
+    val count: Int,
+    @SerialName("sort")
+    val sort: String,
     @SerialName("results")
-    val trashCans: List<NetworkTrashCan>,
-    val sort: String
+    val results: List<NetworkTrashCar>
 )
 
 @Serializable
-data class NetworkTrashCan(
-    val _id: Int,
-    val _importdate: Importdate,
-    @SerialName("備註")
-    val remark: String,
-    @SerialName("地址")
+data class NetworkTrashCar(
+    @SerialName("_id")
+    val id: Int,
+    @SerialName("_importdate")
+    val importdate: Importdate,
+    @SerialName("行政區")
+    val district: String,
+    @SerialName("里別")
+    val 里別: String,
+    @SerialName("分隊")
+    val 分隊: String,
+    @SerialName("局編")
+    val 局編: String,
+    @SerialName("車號")
+    val 車號: String,
+    @SerialName("路線")
+    val 路線: String,
+    @SerialName("車次")
+    val 車次: String,
+    @SerialName("抵達時間")
+    val timeArrive: String,
+    @SerialName("離開時間")
+    val timeLeave: String,
+    @SerialName("地點")
     val address: String,
     @SerialName("經度")
     val longitude: String,
     @SerialName("緯度")
     val latitude: String,
-    @SerialName("行政區")
-    val district: String
 )
-//2024-08-22 13:15:11.877  E  getAllTrashCans: Expected a double but was ?121.595369 at path $.result.results[113].經度
 
 @Serializable
 data class Importdate(
+    @SerialName("date")
     val date: String,
-    val timezone: String,
-    val timezone_type: Int
+    @SerialName("timezone_type")
+    val timezoneType: Int,
+    @SerialName("timezone")
+    val timezone: String
 )

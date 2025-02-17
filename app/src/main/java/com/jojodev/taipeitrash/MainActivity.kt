@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +31,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -51,42 +58,42 @@ class MainActivity : ComponentActivity() {
                 var selected by remember { mutableStateOf(0) }
                 Scaffold(
                     bottomBar = {
-//                        NavigationBar {
-//                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-//                            val currentDestination = navBackStackEntry?.destination
-//                            items.forEach { screen ->
-//                                NavigationBarItem(
-//                                    icon = {
-//                                        Icon(
-//                                            screen.icon,
-//                                            contentDescription = null
-//                                        )
-//                                    },
-//                                    label = { Text(screen.name) },
-//                                    selected = currentDestination?.hierarchy?.any {
-//                                        it.hasRoute(
-//                                            screen::class
-//                                        )
-//                                    } == true,
-//                                    onClick = {
-////                                        selected = idx
-//                                        navController.navigate(screen) {
-//                                            // Pop up to the start destination of the graph to
-//                                            // avoid building up a large stack of destinations
-//                                            // on the back stack as users select items
-//                                            popUpTo(navController.graph.findStartDestination().id) {
-//                                                saveState = true
-//                                            }
-//                                            // Avoid multiple copies of the same destination when
-//                                            // reselecting the same item
-//                                            launchSingleTop = true
-//                                            // Restore state when reselecting a previously selected item
-//                                            restoreState = true
-//                                        }
-//                                    }
-//                                )
-//                            }
-//                        }
+                        NavigationBar {
+                            val navBackStackEntry by navController.currentBackStackEntryAsState()
+                            val currentDestination = navBackStackEntry?.destination
+                            items.forEach { screen ->
+                                NavigationBarItem(
+                                    icon = {
+                                        Icon(
+                                            screen.icon,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    label = { Text(screen.name) },
+                                    selected = currentDestination?.hierarchy?.any {
+                                        it.hasRoute(
+                                            screen::class
+                                        )
+                                    } == true,
+                                    onClick = {
+//                                        selected = idx
+                                        navController.navigate(screen) {
+                                            // Pop up to the start destination of the graph to
+                                            // avoid building up a large stack of destinations
+                                            // on the back stack as users select items
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            // Avoid multiple copies of the same destination when
+                                            // reselecting the same item
+                                            launchSingleTop = true
+                                            // Restore state when reselecting a previously selected item
+                                            restoreState = true
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 ) { innerPadding ->
                     MainNavigation(navController, modifier = Modifier.padding(innerPadding))

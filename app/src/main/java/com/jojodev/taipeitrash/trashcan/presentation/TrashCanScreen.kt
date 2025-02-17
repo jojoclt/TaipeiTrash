@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -56,14 +57,11 @@ import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 
-//import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
-//import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
-    val viewModel = hiltViewModel<TrashCanViewModel>()
+    val viewModel: TrashCanViewModel = hiltViewModel()
 
     val uiStatus by viewModel.uiState.collectAsStateWithLifecycle()
     val collectDate by viewModel.importDate.collectAsStateWithLifecycle("")
@@ -107,7 +105,11 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                 } else Modifier) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
             }
-        })
+            IconButton({}) {
+                Icon(Icons.Filled.MoreVert, contentDescription = "More")
+            }
+        },
+        )
         when (val s = uiStatus) {
             Results.Loading -> {
                 IndeterminateCircularIndicator(loadStatus = true) {

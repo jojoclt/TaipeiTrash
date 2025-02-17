@@ -8,9 +8,10 @@ data class TrashCarEntity(
     @PrimaryKey
     val id: Int,
     val importDate: String,
-    val remark: String,
     val address: String,
-    val longitude: String,
-    val latitude: String,
-    val district: String
+    val longitude: Double,
+    val latitude: Double,
+    val district: String,
+    val timeArrive: String,
+    val timeLeave: String,
 )
