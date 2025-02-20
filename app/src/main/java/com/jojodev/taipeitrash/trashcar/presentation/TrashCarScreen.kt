@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,8 +48,8 @@ import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.trashcan.data.TrashCar
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
+import com.jojodev.taipeitrash.trashcar.data.TrashCar
 
 @Composable
 @Preview
@@ -169,6 +170,7 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         }
     }
 }
+
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun TrashCarMap(
@@ -177,7 +179,6 @@ fun TrashCarMap(
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
 
-    var filteredTrashCar by remember { mutableStateOf(trashCar) }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
@@ -195,7 +196,8 @@ fun TrashCarMap(
             MapUiSettings(mapToolbarEnabled = true)
         )
     }
-
+    val zoomLevels by remember { derivedStateOf { cameraPositionState.position.zoom >= 15f }}
+    var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
             val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
@@ -203,17 +205,8 @@ fun TrashCarMap(
                 bounds
             )
             if (bounds != null) {
-                filteredTrashCar = trashCar.filter { true
-//                    try {
-//                        bounds.contains(
-//                            LatLng(
-//                                it.removePrefix("?").toDouble(),
-//                                it.longitude.removePrefix("?").toDouble()
-//                            )
-//                        )
-//                    } catch (e: Exception) {
-//                        false
-//                    }
+                filteredTrashCar = trashCar.filter {
+                    bounds.contains(it.toLatLng())
                 }
             }
         }
@@ -228,13 +221,15 @@ fun TrashCarMap(
                 onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
             }
         ) {
-            Clustering(trashCar.map {
+            Log.i("ZoomLevel", cameraPositionState.position.zoom.toString())
+            val list = filteredTrashCar.map {
                 MarkerItem(
                     LatLng(it.latitude, it.longitude),
-                    it.id.toString(),
+                    "${it.timeArrive} ~ ${it.timeLeave}",
                     it.address
                 )
-            })
+            }
+            Clustering(list)
         }
         ScaleBar(
             modifier = Modifier
@@ -263,6 +258,7 @@ data class MarkerItem(
     override fun getZIndex(): Float =
         itemZIndex
 }
+
 fun Activity.openAppSettings() {
     Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

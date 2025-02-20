@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.Results
-import com.jojodev.taipeitrash.trashcan.data.TrashCar
+import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import com.jojodev.taipeitrash.trashcar.data.TrashCarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

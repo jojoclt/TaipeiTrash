@@ -1,5 +1,6 @@
-package com.jojodev.taipeitrash.trashcan.data
+package com.jojodev.taipeitrash.trashcar.data
 
+import com.google.android.gms.maps.model.LatLng
 import com.jojodev.taipeitrash.trashcar.data.local.entities.TrashCarEntity
 import com.jojodev.taipeitrash.trashcar.data.network.models.NetworkTrashCar
 
@@ -12,7 +13,9 @@ data class TrashCar(
     val district: String,
     val timeArrive: String,
     val timeLeave: String
-)
+) {
+    fun toLatLng() = LatLng(latitude, longitude)
+}
 
 fun NetworkTrashCar.asEntity() =
     TrashCarEntity(

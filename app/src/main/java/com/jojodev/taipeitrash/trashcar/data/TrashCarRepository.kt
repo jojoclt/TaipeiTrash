@@ -1,9 +1,6 @@
 package com.jojodev.taipeitrash.trashcar.data
 
 import android.util.Log
-import com.jojodev.taipeitrash.trashcan.data.TrashCar
-import com.jojodev.taipeitrash.trashcan.data.asEntity
-import com.jojodev.taipeitrash.trashcan.data.asExternalModel
 import com.jojodev.taipeitrash.trashcar.data.local.dao.TrashCarDao
 import com.jojodev.taipeitrash.trashcar.data.network.NetworkTrashCarDataSource
 import kotlinx.coroutines.Dispatchers
