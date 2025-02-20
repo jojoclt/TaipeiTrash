@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -56,6 +57,10 @@ import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
+import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.mapLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,7 +166,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 
 }
 
-@OptIn(MapsComposeExperimentalApi::class)
+@OptIn(MapsComposeExperimentalApi::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun TrashCanMap(
     trashCan: List<TrashCan> = emptyList(),
@@ -169,8 +174,6 @@ fun TrashCanMap(
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
 
-    var filteredTrashCan by remember { mutableStateOf(trashCan) }
-    Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
     }
@@ -178,7 +181,7 @@ fun TrashCanMap(
         mutableStateOf(
             MapProperties(
 //                maxZoomPreference = 10f,
-//                minZoomPreference = 12f,
+                minZoomPreference = 14f,
                 isMyLocationEnabled = true
             )
         )
@@ -188,40 +191,23 @@ fun TrashCanMap(
             MapUiSettings(mapToolbarEnabled = false)
         )
     }
-    // whenever cameraPositionState.isMoving changes, launch a coroutine
-    //    to fire onBoundsChange. We'll report the visibleRegion
-    //    LatLngBounds
-//    LaunchedEffect(cameraPositionState.isMoving) {
-//        if (!cameraPositionState.isMoving) {
-//            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-//            onBoundsChange(
-//                bounds
-//            )
-//            if (bounds != null) {
-//                filteredTrashCan = trashCan
-//                Log.d("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-//            }
-////                filteredTrashCan = trashCan.filter {
-////                    try {
-////                        bounds.contains(
-////                            LatLng(
-////                                it.latitude.removePrefix("?").toDouble(),
-////                                it.longitude.removePrefix("?").toDouble()
-////                            )
-////                        )
-////                    } catch (e: Exception) {
-////                        false
-////                    }
-////                }
-////            }
-////            Log.i("TrashCanMap", "filteredTrashCan: ${filteredTrashCan.size}")
-//        }
-//    }
+    var filteredTrashCan by remember { mutableStateOf(trashCan) }
+    LaunchedEffect(cameraPositionState.isMoving) {
+        snapshotFlow { cameraPositionState.isMoving }
+            .mapLatest { it }
+            .filter { !it }.collect {
+                val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+                onBoundsChange(
+                    bounds
+                )
+                if (bounds != null) {
+                    filteredTrashCan = trashCan.filter {
+                        bounds.contains(it.toLatLng())
+                    }
+                }
+            }
+    }
     Box {
-//        Box(modifier = Modifier.fillMaxSize().zIndex(2f)) {
-//            Text("TrashCanMap")
-//            Text(trashCan.toString())
-//        }
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
@@ -231,18 +217,14 @@ fun TrashCanMap(
 //                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
             }
         ) {
-            val items = trashCan.map {
+            val list = filteredTrashCan.map {
                 MarkerItem(
-                    LatLng(
-                        it.latitude,
-                        it.longitude
-                    ), it.address, "Marker in ${it.id}"
+                    it.toLatLng(),
+                    it.id.toString(),
+                    it.address
                 )
             }
-            Log.d("TrashCanMap", "mappeditems: ${items.size}")
-//
-//        }
-            Clustering(items = items)
+            Clustering(list)
         }
     }
 

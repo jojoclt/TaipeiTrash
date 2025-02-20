@@ -18,12 +18,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +50,9 @@ import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.mapLatest
 
 @Composable
 @Preview
@@ -171,7 +174,7 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
     }
 }
 
-@OptIn(MapsComposeExperimentalApi::class)
+@OptIn(MapsComposeExperimentalApi::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun TrashCarMap(
     trashCar: List<TrashCar> = emptyList(),
@@ -186,7 +189,7 @@ fun TrashCarMap(
         mutableStateOf(
             MapProperties(
 //                maxZoomPreference = 10f,
-                minZoomPreference = 12f,
+                minZoomPreference = 14f,
                 isMyLocationEnabled = true
             )
         )
@@ -196,20 +199,21 @@ fun TrashCarMap(
             MapUiSettings(mapToolbarEnabled = true)
         )
     }
-    val zoomLevels by remember { derivedStateOf { cameraPositionState.position.zoom >= 15f }}
-    var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
+    var filteredTrashCar by remember { mutableStateOf(trashCar) }
     LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-            onBoundsChange(
-                bounds
-            )
-            if (bounds != null) {
-                filteredTrashCar = trashCar.filter {
-                    bounds.contains(it.toLatLng())
+        snapshotFlow { cameraPositionState.isMoving }
+            .mapLatest { it }
+            .filter { !it }.collect {
+                val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+                onBoundsChange(
+                    bounds
+                )
+                if (bounds != null) {
+                    filteredTrashCar = trashCar.filter {
+                        bounds.contains(it.toLatLng())
+                    }
                 }
             }
-        }
     }
     Box {
         GoogleMap(
@@ -224,7 +228,7 @@ fun TrashCarMap(
             Log.i("ZoomLevel", cameraPositionState.position.zoom.toString())
             val list = filteredTrashCar.map {
                 MarkerItem(
-                    LatLng(it.latitude, it.longitude),
+                    it.toLatLng(),
                     "${it.timeArrive} ~ ${it.timeLeave}",
                     it.address
                 )
