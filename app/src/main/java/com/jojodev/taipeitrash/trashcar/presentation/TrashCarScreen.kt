@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastMap
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +50,7 @@ import com.google.maps.android.compose.widgets.ScaleBar
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.trashcan.presentation.openAppSettings
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -200,6 +203,7 @@ fun TrashCarMap(
         )
     }
     var filteredTrashCar by remember { mutableStateOf(trashCar) }
+    var markerItem by remember { mutableStateOf(emptyList<MarkerItem>()) }
     LaunchedEffect(cameraPositionState.isMoving) {
         snapshotFlow { cameraPositionState.isMoving }
             .mapLatest { it }
@@ -209,8 +213,15 @@ fun TrashCarMap(
                     bounds
                 )
                 if (bounds != null) {
-                    filteredTrashCar = trashCar.filter {
+                    filteredTrashCar = trashCar.fastFilter {
                         bounds.contains(it.toLatLng())
+                    }
+                    markerItem = filteredTrashCar.fastMap {
+                        MarkerItem(
+                            it.toLatLng(),
+                            "${it.timeArrive} ~ ${it.timeLeave}",
+                            it.address
+                        )
                     }
                 }
             }
@@ -226,14 +237,14 @@ fun TrashCarMap(
             }
         ) {
             Log.i("ZoomLevel", cameraPositionState.position.zoom.toString())
-            val list = filteredTrashCar.map {
-                MarkerItem(
-                    it.toLatLng(),
-                    "${it.timeArrive} ~ ${it.timeLeave}",
-                    it.address
-                )
-            }
-            Clustering(list)
+//            val list = filteredTrashCar.map {
+//                MarkerItem(
+//                    it.toLatLng(),
+//                    "${it.timeArrive} ~ ${it.timeLeave}",
+//                    it.address
+//                )
+//            }
+            Clustering(markerItem)
         }
         ScaleBar(
             modifier = Modifier

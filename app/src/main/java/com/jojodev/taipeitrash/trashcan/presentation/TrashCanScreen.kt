@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.util.fastMap
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +59,7 @@ import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
+import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
@@ -192,6 +194,8 @@ fun TrashCanMap(
         )
     }
     var filteredTrashCan by remember { mutableStateOf(trashCan) }
+    var markerItem by remember { mutableStateOf(emptyList<MarkerItem>()) }
+
     LaunchedEffect(cameraPositionState.isMoving) {
         snapshotFlow { cameraPositionState.isMoving }
             .mapLatest { it }
@@ -203,6 +207,13 @@ fun TrashCanMap(
                 if (bounds != null) {
                     filteredTrashCan = trashCan.filter {
                         bounds.contains(it.toLatLng())
+                    }
+                    markerItem = filteredTrashCan.fastMap {
+                        MarkerItem(
+                            it.toLatLng(),
+                            it.id.toString(),
+                            it.address
+                        )
                     }
                 }
             }
@@ -217,14 +228,14 @@ fun TrashCanMap(
 //                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
             }
         ) {
-            val list = filteredTrashCan.map {
-                MarkerItem(
-                    it.toLatLng(),
-                    it.id.toString(),
-                    it.address
-                )
-            }
-            Clustering(list)
+//            val list = filteredTrashCan.map {
+//                MarkerItem(
+//                    it.toLatLng(),
+//                    it.id.toString(),
+//                    it.address
+//                )
+//            }
+            Clustering(markerItem)
         }
     }
 
