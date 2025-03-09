@@ -233,7 +233,22 @@ fun TrashCarMap(
             uiSettings = mapUiSettings,
             properties = mapProperties,
             onMapLoaded = {
-                onBoundsChange(cameraPositionState.projection?.visibleRegion?.latLngBounds)
+                val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
+                onBoundsChange(
+                    bounds
+                )
+                if (bounds != null) {
+                    filteredTrashCar = trashCar.filter {
+                        bounds.contains(it.toLatLng())
+                    }
+                    markerItem = filteredTrashCar.fastMap {
+                        MarkerItem(
+                            it.toLatLng(),
+                            "${it.timeArrive} ~ ${it.timeLeave}",
+                            it.address
+                        )
+                    }
+                }
             }
         ) {
             Log.i("ZoomLevel", cameraPositionState.position.zoom.toString())
