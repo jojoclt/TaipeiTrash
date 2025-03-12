@@ -41,17 +41,13 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.clustering.ClusterItem
-import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.GoogleMapComposable
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.trashcan.TrashCanAction
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
@@ -186,56 +182,6 @@ fun TrashCanScreenContent(
 private fun TrashCanScreenPreview() {
     TaipeiTrashTheme {
         TrashCanScreenContent(data = emptyList())
-    }
-}
-
-@Composable
-fun TrashMap(
-    modifier: Modifier = Modifier,
-    cameraPositionState: CameraPositionState,
-    content: @Composable @GoogleMapComposable () -> Unit = {}
-) {
-
-    var mapProperties by remember {
-        mutableStateOf(
-            MapProperties(
-//                maxZoomPreference = 10f,
-                minZoomPreference = 14f,
-                isMyLocationEnabled = true
-            )
-        )
-    }
-    var mapUiSettings by remember {
-        mutableStateOf(
-            MapUiSettings(mapToolbarEnabled = false)
-        )
-    }
-
-    GoogleMap(
-        modifier = modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState,
-        uiSettings = mapUiSettings,
-        properties = mapProperties,
-        onMapLoaded = {
-            val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-//            onBoundsChange(
-//                bounds
-//            )
-//            if (bounds != null) {
-//                filteredTrashCan = trashCan.filter {
-//                    bounds.contains(it.toLatLng())
-//                }
-//                markerItem = filteredTrashCan.fastMap {
-//                    MarkerItem(
-//                        it.toLatLng(),
-//                        it.id.toString(),
-//                        it.address
-//                    )
-//                }
-//            }
-        }
-    ) {
-        content()
     }
 }
 
