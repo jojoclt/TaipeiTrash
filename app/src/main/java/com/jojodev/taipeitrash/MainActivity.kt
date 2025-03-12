@@ -11,22 +11,35 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,55 +56,57 @@ class MainActivity : ComponentActivity() {
         setContent {
             TaipeiTrashTheme {
                 val navController = rememberNavController()
-                MainNavigation(navController)
+//                MainNavigation(navController)
 
-//                val items = listOf(
-//                    Routes.TrashCanScreen,
-//                    Routes.TrashCarScreen,
-//                )
-//                var selected by remember { mutableStateOf(0) }
-//                Scaffold(
-//                    bottomBar = {
-//                        NavigationBar {
-//                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-//                            val currentDestination = navBackStackEntry?.destination
-//                            items.forEach { screen ->
-//                                NavigationBarItem(
-//                                    icon = {
-//                                        Icon(
-//                                            screen.icon,
-//                                            contentDescription = null
-//                                        )
-//                                    },
-//                                    label = { Text(screen.name) },
-//                                    selected = currentDestination?.hierarchy?.any {
-//                                        it.hasRoute(
-//                                            screen::class
-//                                        )
-//                                    } == true,
-//                                    onClick = {
-////                                        selected = idx
-//                                        navController.navigate(screen) {
-//                                            // Pop up to the start destination of the graph to
-//                                            // avoid building up a large stack of destinations
-//                                            // on the back stack as users select items
-//                                            popUpTo(navController.graph.findStartDestination().id) {
-//                                                saveState = true
-//                                            }
-//                                            // Avoid multiple copies of the same destination when
-//                                            // reselecting the same item
-//                                            launchSingleTop = true
-//                                            // Restore state when reselecting a previously selected item
-//                                            restoreState = true
-//                                        }
-//                                    }
-//                                )
-//                            }
-//                        }
-//                    }
-//                ) { innerPadding ->
-//                    MainNavigation(navController, modifier = Modifier.padding(innerPadding))
-//                }
+                val items = listOf(
+                    NavigationItem("Trash Can", TrashCanScreen, Icons.Default.Delete),
+                    NavigationItem(
+                        "Garbage Truck",
+                        TrashCarScreen,
+                        ImageVector.vectorResource(R.drawable.airport_shuttle)
+                    ),
+                )
+                var selected by remember { mutableStateOf(0) }
+                Scaffold(
+                    bottomBar = {
+                        NavigationBar {
+                            val navBackStackEntry by navController.currentBackStackEntryAsState()
+                            val currentDestination = navBackStackEntry?.destination
+                            items.forEach { screen ->
+                                NavigationBarItem(
+                                    icon = {
+                                        Icon(
+                                            screen.icon,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    label = { Text(screen.name) },
+                                    selected = currentDestination?.hierarchy?.any {
+                                        it.hasRoute(screen.route::class)
+                                    } == true,
+                                    onClick = {
+//                                        selected = idx
+                                        navController.navigate(screen.route) {
+                                            // Pop up to the start destination of the graph to
+                                            // avoid building up a large stack of destinations
+                                            // on the back stack as users select items
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            // Avoid multiple copies of the same destination when
+                                            // reselecting the same item
+                                            launchSingleTop = true
+                                            // Restore state when reselecting a previously selected item
+                                            restoreState = true
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                ) { innerPadding ->
+                    MainNavigation(navController, modifier = Modifier.padding(innerPadding))
+                }
             }
         }
     }
@@ -117,8 +132,16 @@ fun GreetingPreview() {
 fun IndeterminateCircularIndicator(loadStatus: Boolean = true, onClick: (Boolean) -> Unit = {}) {
     var loading by remember { mutableStateOf(loadStatus) }
 
-    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Box(modifier = Modifier.padding(16.dp).size(64.dp)) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .size(64.dp)
+        ) {
             if (loading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(64.dp),
@@ -162,4 +185,5 @@ fun Context.findAndroidActivity(): Activity? {
     return null
 }
 
-
+@Stable
+data class NavigationItem(val name: String, val route: Routes, val icon: ImageVector)
