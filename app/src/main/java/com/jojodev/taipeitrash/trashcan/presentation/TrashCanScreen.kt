@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -13,13 +14,25 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -32,17 +45,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastForEach
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.clustering.ClusterItem
-import com.google.maps.android.compose.MapsComposeExperimentalApi
-import com.google.maps.android.compose.clustering.Clustering
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
@@ -51,8 +65,6 @@ import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.trashcan.TrashCanAction
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
-import com.jojodev.taipeitrash.trashcar.presentation.MarkerItem
-import com.jojodev.taipeitrash.trashcar.presentation.openAppSettings
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
@@ -136,13 +148,113 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                         Text("Enable Location Permission")
                     }
                 }
-            } else TrashCanScreenContent(data = data)
+            } else {
+                var isExpanded by remember { mutableStateOf(false) }
+                var selectedTrash by remember { mutableStateOf<TrashCan?>(null) }
+                BottomSheetScaffold(
+                    isExpanded = isExpanded,
+                    onExpanded = { isExpanded = it },
+                    bottomSheetContent = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            selectedTrash?.let { trashCan ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Trash Can Details",
+                                            style = MaterialTheme.typography.headlineSmall
+                                        )
+                                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+
+                                        DetailRow(title = "ID", value = "#${trashCan.id}")
+                                        DetailRow(title = "District", value = trashCan.district)
+                                        DetailRow(title = "Address", value = trashCan.address)
+                                        DetailRow(
+                                            title = "Import Date",
+                                            value = trashCan.importDate
+                                        )
+
+                                        if (trashCan.remark.isNotEmpty()) {
+                                            Card(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                                )
+                                            ) {
+                                                Column(modifier = Modifier.padding(12.dp)) {
+                                                    Text(
+                                                        text = "Remarks",
+                                                        style = MaterialTheme.typography.titleMedium
+                                                    )
+                                                    Text(
+                                                        text = trashCan.remark,
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Location",
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                            Text(
+                                                text = "${
+                                                    trashCan.latitude.toString().take(7)
+                                                }, ${trashCan.longitude.toString().take(7)}",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                }
+                            } ?: run {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(24.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("Select a trash can to view details")
+                                    }
+                                }
+                            }
+                        }
+                    }) {
+                    TrashCanScreenContent(data = data) {
+                        when (it) {
+                            is TrashCanAction.ShowDetail -> {
+                                selectedTrash = it.trashCan
+                                isExpanded = true
+                            }
+
+                            else -> {}
+                        }
+                    }
+                }
+            }
         }
     }
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrashCanScreenContent(
     modifier: Modifier = Modifier,
@@ -150,29 +262,8 @@ fun TrashCanScreenContent(
     onAction: (TrashCanAction) -> Unit = {}
 ) {
     Box(modifier = modifier) {
-        if (data.isNotEmpty()) TrashCanMap(data)
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.Center
-        ) {
-            CenterAlignedTopAppBar(
-                title = { Text("Trash Can") },
-                actions = {
-//                    IconButton(
-//                        {
-//                            viewModel.fetchData(forceUpdate = true) },
-//                        modifier = if (uiStatus is Results.Loading) Modifier.graphicsLayer {
-//                            rotationZ = angle
-//                        } else Modifier) {
-//                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-//                    }
-//                    IconButton({}) {
-//                        Icon(Icons.Filled.MoreVert, contentDescription = "More")
-//                    }
-                },
-            )
-
+        if (data.isNotEmpty()) {
+            TrashCanMap(data, onClick = { onAction(TrashCanAction.ShowDetail(it)) })
         }
     }
 }
@@ -185,11 +276,11 @@ private fun TrashCanScreenPreview() {
     }
 }
 
-@OptIn(ExperimentalCoroutinesApi::class, MapsComposeExperimentalApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun TrashCanMap(
     trashCan: List<TrashCan> = emptyList(),
-    onBoundsChange: (LatLngBounds?) -> Unit = {}
+    onClick: (TrashCan) -> Unit = {}
 ) {
 
     var filteredTrashCan by remember { mutableStateOf(trashCan) }
@@ -205,25 +296,27 @@ fun TrashCanMap(
             .mapLatest { it }
             .filter { !it }.collect {
                 val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-                onBoundsChange(
-                    bounds
-                )
-                if (bounds != null) {
-                    filteredTrashCan = trashCan.filter {
-                        bounds.contains(it.toLatLng())
+                val zoom = cameraPositionState.position.zoom
+
+                if (zoom >= 15)
+                    bounds?.let { bound ->
+                        filteredTrashCan = trashCan.fastFilter { bound.contains(it.toLatLng()) }
                     }
-                    markerItem = filteredTrashCan.fastMap {
-                        MarkerItem(
-                            it.toLatLng(),
-                            it.id.toString(),
-                            it.address
-                        )
-                    }
-                }
+                else filteredTrashCan = emptyList()
+
             }
     }
     TrashMap(cameraPositionState = cameraPositionState) {
-        Clustering(markerItem)
+        filteredTrashCan.fastForEach { ele ->
+            Marker(
+                state = MarkerState(position = ele.toLatLng()),
+                title = ele.id.toString(),
+                onClick = { _ ->
+                    onClick(ele)
+                    false
+                }
+            )
+        }
     }
 
 }
@@ -252,4 +345,89 @@ fun Activity.openAppSettings() {
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
         Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
+    fun Activity.openAppSettings() {
+        Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        ).also(::startActivity)
+    }
+}
+
+@Composable
+private fun DetailRow(title: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+
+@Composable
+fun BottomSheetScaffold(
+    isExpanded: Boolean,
+    bottomSheetContent: @Composable () -> Unit = {},
+    onExpanded: (Boolean) -> Unit = {},
+    content: @Composable () -> Unit = {}
+) {
+
+    BackHandler(isExpanded) {
+        onExpanded(false)
+    }
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
+    // Track sheet state changes to notify parent
+    LaunchedEffect(scaffoldState.bottomSheetState) {
+        snapshotFlow { scaffoldState.bottomSheetState.currentValue }
+            .collect { sheetValue ->
+                when (sheetValue) {
+                    SheetValue.Expanded -> onExpanded(true)
+                    SheetValue.PartiallyExpanded -> onExpanded(false)
+                    SheetValue.Hidden -> onExpanded(false)
+                }
+            }
+    }
+
+    // Handle expansion state changes directly
+    LaunchedEffect(isExpanded) {
+        if (isExpanded) {
+            scaffoldState.bottomSheetState.expand()
+        } else {
+            scaffoldState.bottomSheetState.partialExpand()
+        }
+    }
+
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        sheetContent = {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                bottomSheetContent()
+            }
+        },
+        sheetPeekHeight = 144.dp
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
 }

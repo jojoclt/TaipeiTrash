@@ -1,18 +1,21 @@
 package com.jojodev.taipeitrash.trashcar.presentation
 
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Divider
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,23 +28,24 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastForEach
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.clustering.ClusterItem
-import com.google.maps.android.compose.MapsComposeExperimentalApi
-import com.google.maps.android.compose.clustering.Clustering
+import com.google.maps.android.compose.MarkerInfoWindow
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.core.presentation.TrashMap
+import com.jojodev.taipeitrash.trashcan.presentation.BottomSheetScaffold
+import com.jojodev.taipeitrash.trashcan.presentation.openAppSettings
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,7 +54,6 @@ import kotlinx.coroutines.flow.mapLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
     val viewModel: TrashCarViewModel = hiltViewModel()
     val uiStatus by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,8 +90,6 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 
         is Results.Success -> {
             val data = s.data
-            Log.d("TrashCarScreen", "data: ${data.size}")
-            Log.i("PermissionViewModel", "locationPermission: $locationPermission")
             if (!locationPermission) {
                 if (!isLaunchedOnce) {
                     permissionViewModel.setLaunchedOnce(true)
@@ -107,7 +108,90 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                         Text("Enable Location Permission")
                     }
                 }
-            } else TrashCarScreenContent(data = data)
+            } else {
+                var isExpanded by remember { mutableStateOf(false) }
+                var selectedTrashCar by remember { mutableStateOf<TrashCar?>(null) }
+
+                BottomSheetScaffold(
+                    isExpanded = isExpanded,
+                    onExpanded = { isExpanded = it },
+                    bottomSheetContent = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            selectedTrashCar?.let { trashCar ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Trash Car Details",
+                                            style = MaterialTheme.typography.headlineSmall
+                                        )
+                                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+
+                                        DetailRow(title = "ID", value = trashCar.id.toString())
+                                        DetailRow(title = "Address", value = trashCar.address)
+                                        DetailRow(
+                                            title = "Arrival Time",
+                                            value = trashCar.timeArrive
+                                        )
+                                        DetailRow(
+                                            title = "Departure Time",
+                                            value = trashCar.timeLeave
+                                        )
+                                        DetailRow(title = "District", value = trashCar.district)
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Location",
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                            Text(
+                                                text = "${
+                                                    trashCar.latitude.toString().take(7)
+                                                }, ${trashCar.longitude.toString().take(7)}",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                }
+                            } ?: run {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(24.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("Select a trash car to view details")
+                                    }
+                                }
+                            }
+                        }
+                    }) {
+                    TrashCarScreenContent(
+                        data = data,
+                        onSelect = {
+                            selectedTrashCar = it
+                            isExpanded = true
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -116,33 +200,25 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 @Composable
 fun TrashCarScreenContent(
     modifier: Modifier = Modifier,
-    data: List<TrashCar>
+    data: List<TrashCar>,
+    onSelect: (TrashCar) -> Unit = {}
 ) {
     Box(modifier = modifier) {
-        if (data.isNotEmpty()) TrashCarMap(data)
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            CenterAlignedTopAppBar(
-                title = { Text("Trash Car") }
-            )
-        }
+        if (data.isNotEmpty()) TrashCarMap(data, onClick = onSelect)
     }
 }
 
-@OptIn(ExperimentalCoroutinesApi::class, MapsComposeExperimentalApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun TrashCarMap(
     trashCar: List<TrashCar> = emptyList(),
-    onBoundsChange: (LatLngBounds?) -> Unit = {}
+    onClick: (TrashCar) -> Unit = {}
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
     var filteredTrashCar by remember { mutableStateOf(trashCar) }
-    var markerItem by remember { mutableStateOf(emptyList<MarkerItem>()) }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
+        position = CameraPosition.fromLatLngZoom(taipeiMain, 14f)
     }
 
     LaunchedEffect(cameraPositionState.isMoving) {
@@ -150,43 +226,63 @@ fun TrashCarMap(
             .mapLatest { it }
             .filter { !it }.collect {
                 val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
-                onBoundsChange(bounds)
-
-                if (bounds != null) {
-                    filteredTrashCar = trashCar.filter {
-                        bounds.contains(it.toLatLng())
+                val zoom = cameraPositionState.position.zoom
+                if (zoom >= 16)
+                    bounds?.let { bound ->
+                        filteredTrashCar = trashCar.fastFilter { bound.contains(it.toLatLng()) }
                     }
-                    markerItem = filteredTrashCar.fastMap {
-                        MarkerItem(
-                            it.toLatLng(),
-                            "${it.timeArrive} ~ ${it.timeLeave}",
-                            it.address
-                        )
-                    }
-                }
+                else filteredTrashCar = emptyList()
             }
     }
 
     TrashMap(cameraPositionState = cameraPositionState) {
-        Clustering(markerItem)
+        filteredTrashCar.fastForEach { trashCar ->
+            MarkerInfoWindow(
+                state = MarkerState(trashCar.toLatLng()),
+                onClick = {
+                    onClick(trashCar)
+                    false
+                },
+                title = trashCar.timeArrive,
+            ) { marker ->
+                Card(
+                    modifier = Modifier.padding(4.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Arrival: ${marker.title}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = marker.snippet ?: "",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
-data class MarkerItem(
-    val itemPosition: LatLng,
-    val itemTitle: String,
-    val itemSnippet: String,
-    val itemZIndex: Float = 0f
-) : ClusterItem {
-    override fun getPosition(): LatLng = itemPosition
-    override fun getTitle(): String = itemTitle
-    override fun getSnippet(): String = itemSnippet
-    override fun getZIndex(): Float = itemZIndex
-}
-
-fun Activity.openAppSettings() {
-    Intent(
-        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-        Uri.fromParts("package", packageName, null)
-    ).also(::startActivity)
+@Composable
+private fun DetailRow(title: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
 }
