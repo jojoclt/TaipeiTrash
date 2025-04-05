@@ -52,12 +52,14 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
@@ -65,6 +67,7 @@ import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.trashcan.TrashCanAction
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
+import com.jojodev.taipeitrash.trashcan.data.toLatLng
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
@@ -238,7 +241,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                             }
                         }
                     }) {
-                    TrashCanScreenContent(data = data) {
+                    TrashCanScreenContent(data = data, selectedTrash = selectedTrash) {
                         when (it) {
                             is TrashCanAction.ShowDetail -> {
                                 selectedTrash = it.trashCan
@@ -259,11 +262,15 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 fun TrashCanScreenContent(
     modifier: Modifier = Modifier,
     data: List<TrashCan>,
+    selectedTrash: TrashCan? = null,
     onAction: (TrashCanAction) -> Unit = {}
 ) {
     Box(modifier = modifier) {
         if (data.isNotEmpty()) {
-            TrashCanMap(data, onClick = { onAction(TrashCanAction.ShowDetail(it)) })
+            TrashCanMap(
+                data,
+                selectedTrash = selectedTrash,
+                onClick = { onAction(TrashCanAction.ShowDetail(it)) })
         }
     }
 }
@@ -280,11 +287,19 @@ private fun TrashCanScreenPreview() {
 @Composable
 fun TrashCanMap(
     trashCan: List<TrashCan> = emptyList(),
+    selectedTrash: TrashCan? = null,
     onClick: (TrashCan) -> Unit = {}
 ) {
 
     var filteredTrashCan by remember { mutableStateOf(trashCan) }
     var markerItem by remember { mutableStateOf(emptyList<MarkerItem>()) }
+
+    val markerState = rememberUpdatedMarkerState(selectedTrash.toLatLng())
+    LaunchedEffect(selectedTrash) {
+        if (selectedTrash != null)
+            markerState.showInfoWindow()
+    }
+
 
     val cameraPositionState = rememberCameraPositionState {
         val taipeiMain = LatLng(25.0330, 121.5654)
@@ -307,14 +322,26 @@ fun TrashCanMap(
             }
     }
     TrashMap(cameraPositionState = cameraPositionState) {
-        filteredTrashCan.fastForEach { ele ->
+        selectedTrash?.let {
+            Marker(
+                state = markerState,
+                title = it.address,
+                onClick = { _ ->
+                    onClick(it)
+                    false
+                },
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                zIndex = 1f
+            )
+        }
+        filteredTrashCan.fastFilter { it != selectedTrash }.fastForEach { ele ->
             Marker(
                 state = MarkerState(position = ele.toLatLng()),
-                title = ele.id.toString(),
+                title = ele.address,
                 onClick = { _ ->
                     onClick(ele)
                     false
-                }
+                },
             )
         }
     }

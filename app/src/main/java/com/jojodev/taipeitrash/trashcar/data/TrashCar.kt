@@ -13,9 +13,10 @@ data class TrashCar(
     val district: String,
     val timeArrive: String,
     val timeLeave: String
-) {
-    fun toLatLng() = LatLng(latitude, longitude)
-}
+)
+fun TrashCar?.toLatLng() = this?.let {
+    LatLng(it.latitude, it.longitude)
+} ?: LatLng(0.0, 0.0)
 
 fun NetworkTrashCar.asEntity() =
     TrashCarEntity(

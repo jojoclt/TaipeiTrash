@@ -40,6 +40,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
@@ -48,6 +49,7 @@ import com.jojodev.taipeitrash.trashcan.presentation.BottomSheetScaffold
 import com.jojodev.taipeitrash.trashcan.presentation.openAppSettings
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
+import com.jojodev.taipeitrash.trashcar.data.toLatLng
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
@@ -185,6 +187,7 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                     }) {
                     TrashCarScreenContent(
                         data = data,
+                        selectedTrashCar = selectedTrashCar,
                         onSelect = {
                             selectedTrashCar = it
                             isExpanded = true
@@ -201,10 +204,15 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 fun TrashCarScreenContent(
     modifier: Modifier = Modifier,
     data: List<TrashCar>,
+    selectedTrashCar: TrashCar? = null,
     onSelect: (TrashCar) -> Unit = {}
 ) {
     Box(modifier = modifier) {
-        if (data.isNotEmpty()) TrashCarMap(data, onClick = onSelect)
+        if (data.isNotEmpty()) TrashCarMap(
+            data,
+            selectedTrash = selectedTrashCar,
+            onClick = onSelect
+        )
     }
 }
 
@@ -212,6 +220,7 @@ fun TrashCarScreenContent(
 @Composable
 fun TrashCarMap(
     trashCar: List<TrashCar> = emptyList(),
+    selectedTrash: TrashCar? = null,
     onClick: (TrashCar) -> Unit = {}
 ) {
     val taipeiMain = LatLng(25.0330, 121.5654)
@@ -220,6 +229,14 @@ fun TrashCarMap(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(taipeiMain, 14f)
     }
+
+    val markerState = rememberUpdatedMarkerState(selectedTrash.toLatLng())
+
+    LaunchedEffect(selectedTrash) {
+        if (selectedTrash != null)
+            markerState.showInfoWindow()
+    }
+
 
     LaunchedEffect(cameraPositionState.isMoving) {
         snapshotFlow { cameraPositionState.isMoving }
@@ -236,7 +253,37 @@ fun TrashCarMap(
     }
 
     TrashMap(cameraPositionState = cameraPositionState) {
-        filteredTrashCar.fastForEach { trashCar ->
+        selectedTrash?.let {
+            MarkerInfoWindow(
+                state = markerState,
+                onClick = {
+                    false
+                },
+                title = it.timeArrive,
+                snippet = it.address
+            ) { marker ->
+                Card(
+                    modifier = Modifier.padding(4.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Arrival: ${marker.title}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = marker.snippet ?: "",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
+        filteredTrashCar.fastFilter {selectedTrash != it} .fastForEach { trashCar ->
             MarkerInfoWindow(
                 state = MarkerState(trashCar.toLatLng()),
                 onClick = {

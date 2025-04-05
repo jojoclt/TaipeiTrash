@@ -12,9 +12,11 @@ data class TrashCan(
     val latitude: Double,
     val longitude: Double,
     val district: String
-) {
-    fun toLatLng() = LatLng(latitude, longitude)
-}
+)
+fun TrashCan?.toLatLng() = this?.let {
+    LatLng(it.latitude, it.longitude)
+} ?: LatLng(0.0, 0.0)
+
 fun NetworkTrashCan.asEntity() =
     TrashCanEntity(
         id = _id,
