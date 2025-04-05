@@ -321,8 +321,54 @@ fun TrashCanMap(
 
             }
     }
+//    val infiniteTransition = rememberInfiniteTransition(label = "PulseComponentAnimation")
+//
+//    val radius by infiniteTransition.animateFloat(
+//        initialValue = 0f,
+//        targetValue = 50f,
+//        animationSpec = InfiniteRepeatableSpec(
+//            animation = tween(3000), repeatMode = RepeatMode.Restart
+//        ),
+//        label = "radius"
+//    )
+//
+//    val alpha by infiniteTransition.animateFloat(
+//        initialValue = 1f,
+//        targetValue = 0f,
+//        animationSpec = InfiniteRepeatableSpec(
+//            animation = tween(3000),
+//            repeatMode = RepeatMode.Restart
+//        ), label = "alpha"
+//    )
     TrashMap(cameraPositionState = cameraPositionState) {
-        selectedTrash?.let {
+        selectedTrash?.let { it ->
+
+//            val latLng = it.toLatLng()
+//            val newLat = latLng.latitude + -0.00004
+//            val newLng = latLng.longitude
+//
+//            MarkerComposable(
+//                keys = arrayOf(it.id),
+//                state = MarkerState(position = LatLng(newLat, newLng))
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(18.dp)
+//                        .background(color = Color(0xff2FAA59), shape = CircleShape)
+//                        .border(width = 2.dp, color = Color.White, shape = CircleShape)
+//                )
+//            }
+//
+//            Circle(
+//                center = latLng,
+//                clickable = false,
+//                fillColor = Color(0xff2FAA59).copy(alpha = alpha),
+//                radius = radius.toDouble(),
+//                strokeColor = Color.Transparent,
+//                strokeWidth = 0f,
+//                tag = "",
+//                onClick = { }
+//            )
             Marker(
                 state = markerState,
                 title = it.address,
@@ -330,11 +376,28 @@ fun TrashCanMap(
                     onClick(it)
                     false
                 },
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
                 zIndex = 1f
             )
+
         }
         filteredTrashCan.fastFilter { it != selectedTrash }.fastForEach { ele ->
+//            MarkerComposable(
+//                keys = arrayOf(ele.id),
+//                state = MarkerState(position = ele.toLatLng()),
+//                title = ele.address,
+//                onClick = {
+//                    onClick(ele)
+//                    false
+//                }) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(18.dp)
+//                        .background(color = Color.Red, shape = CircleShape)
+//                        .border(width = 2.dp, color = Color.White, shape = CircleShape)
+//                )
+//
+//            }
             Marker(
                 state = MarkerState(position = ele.toLatLng()),
                 title = ele.address,

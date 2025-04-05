@@ -35,6 +35,7 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerInfoWindow
@@ -259,7 +260,8 @@ fun TrashCarMap(
                 onClick = {
                     false
                 },
-                title = it.timeArrive,
+                title = "${it.timeArrive}~${it.timeLeave}",
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
                 snippet = it.address
             ) { marker ->
                 Card(
@@ -271,7 +273,7 @@ fun TrashCarMap(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Arrival: ${marker.title}",
+                            text = "${marker.title}",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
