@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Divider
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,8 +45,8 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.core.presentation.BaseSheetScaffold
 import com.jojodev.taipeitrash.core.presentation.TrashMap
-import com.jojodev.taipeitrash.trashcan.presentation.BottomSheetScaffold
 import com.jojodev.taipeitrash.trashcan.presentation.openAppSettings
 import com.jojodev.taipeitrash.trashcar.TrashCarViewModel
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
@@ -115,7 +115,7 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
                 var isExpanded by remember { mutableStateOf(false) }
                 var selectedTrashCar by remember { mutableStateOf<TrashCar?>(null) }
 
-                BottomSheetScaffold(
+                BaseSheetScaffold(
                     isExpanded = isExpanded,
                     onExpanded = { isExpanded = it },
                     bottomSheetContent = {

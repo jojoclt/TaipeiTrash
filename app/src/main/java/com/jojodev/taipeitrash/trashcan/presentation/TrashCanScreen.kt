@@ -6,7 +6,6 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -18,21 +17,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -63,6 +56,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.core.presentation.BaseSheetScaffold
 import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.trashcan.TrashCanAction
 import com.jojodev.taipeitrash.trashcan.TrashCanViewModel
@@ -154,7 +148,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
             } else {
                 var isExpanded by remember { mutableStateOf(false) }
                 var selectedTrash by remember { mutableStateOf<TrashCan?>(null) }
-                BottomSheetScaffold(
+                BaseSheetScaffold(
                     isExpanded = isExpanded,
                     onExpanded = { isExpanded = it },
                     bottomSheetContent = {
@@ -458,66 +452,5 @@ private fun DetailRow(title: String, value: String) {
             text = value,
             style = MaterialTheme.typography.bodyMedium
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-
-@Composable
-fun BottomSheetScaffold(
-    isExpanded: Boolean,
-    bottomSheetContent: @Composable () -> Unit = {},
-    onExpanded: (Boolean) -> Unit = {},
-    content: @Composable () -> Unit = {}
-) {
-
-    BackHandler(isExpanded) {
-        onExpanded(false)
-    }
-    val scaffoldState = rememberBottomSheetScaffoldState()
-
-    // Track sheet state changes to notify parent
-    LaunchedEffect(scaffoldState.bottomSheetState) {
-        snapshotFlow { scaffoldState.bottomSheetState.currentValue }
-            .collect { sheetValue ->
-                when (sheetValue) {
-                    SheetValue.Expanded -> onExpanded(true)
-                    SheetValue.PartiallyExpanded -> onExpanded(false)
-                    SheetValue.Hidden -> onExpanded(false)
-                }
-            }
-    }
-
-    // Handle expansion state changes directly
-    LaunchedEffect(isExpanded) {
-        if (isExpanded) {
-            scaffoldState.bottomSheetState.expand()
-        } else {
-            scaffoldState.bottomSheetState.partialExpand()
-        }
-    }
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetContent = {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                bottomSheetContent()
-            }
-        },
-        sheetPeekHeight = 144.dp
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            content()
-        }
     }
 }
