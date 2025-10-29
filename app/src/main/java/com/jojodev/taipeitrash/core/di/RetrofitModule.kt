@@ -8,6 +8,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
@@ -27,8 +28,13 @@ object RetrofitModule {
     fun provideRetrofit(baseUrl: String): Retrofit {
         val networkJson = Json { ignoreUnknownKeys = true }
 
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         val client = OkHttpClient.Builder()
-            .readTimeout(120, TimeUnit.SECONDS)
+            .addInterceptor(logging)
+            .readTimeout(60, TimeUnit.SECONDS)
             .build()
         return Retrofit.Builder()
             .baseUrl(baseUrl)

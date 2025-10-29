@@ -15,6 +15,4 @@ interface TrashCanDao {
 
     @Query("SELECT * FROM trashcan")
     fun getTrashCan(): List<TrashCanEntity>
-
-
 }
