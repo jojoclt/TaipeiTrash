@@ -3,7 +3,9 @@ package com.jojodev.taipeitrash.startup
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcan.data.TrashCanRepository
+import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import com.jojodev.taipeitrash.trashcar.data.TrashCarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.coroutineScope
@@ -42,18 +44,25 @@ class StartupViewModel @Inject constructor(
         initialValue = 0f
     )
 
+    private val _trashCar = MutableStateFlow(emptyList<TrashCar>())
+    val trashCar: StateFlow<List<TrashCar>> = _trashCar.asStateFlow()
+
+    private val _trashCan = MutableStateFlow(emptyList<TrashCan>())
+    val trashCan: StateFlow<List<TrashCan>> = _trashCan
+
+
     private fun loadData() {
         viewModelScope.launch {
             try {
                 coroutineScope {
                     launch {
-                        trashCarRepository.getTrashCars { progress ->
+                        _trashCar.value = trashCarRepository.getTrashCars { progress ->
                             _trashCarProgress.value = progress
                         }
                     }
 
                     launch {
-                        trashCanRepository.getTrashCans { progress ->
+                        _trashCan.value = trashCanRepository.getTrashCans { progress ->
                             _trashCanProgress.value = progress
                         }
                     }
