@@ -19,12 +19,13 @@ class PermissionViewModel(context: Context) : ViewModel() {
     private val _isLaunchedOnce = MutableStateFlow(false)
     val isLaunchedOnce = _isLaunchedOnce.asStateFlow()
 
-    private val _permissionGranted = MutableStateFlow(false)
-    val permissionGranted = _permissionGranted.onStart { getPermissionEnabled(context, permission) }
-        .stateIn(
+    private val _permissionGranted = MutableStateFlow<Boolean?>(null)
+    val permissionGranted = _permissionGranted.onStart {
+        _permissionGranted.value = getPermissionEnabled(context, permission)
+    }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
-            false
+            null
         )
 
     fun setPermissionGranted(granted: Boolean) {

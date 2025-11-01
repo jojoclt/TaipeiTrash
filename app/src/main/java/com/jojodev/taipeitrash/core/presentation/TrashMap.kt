@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,11 +91,13 @@ fun TrashMap(
 @Composable
 fun BottomSheetContent(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .background(Color.Blue)
-
-            .fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text("Bottom Sheet Content")
+        Text(
+            text = "Select a marker on the map to see details",
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

@@ -93,7 +93,7 @@ fun TrashCarScreen(permissionViewModel: PermissionViewModel = viewModel()) {
 
         is Results.Success -> {
             val data = s.data
-            if (!locationPermission) {
+            if (locationPermission == false) {
                 if (!isLaunchedOnce) {
                     permissionViewModel.setLaunchedOnce(true)
                     SideEffect { locationPermissionLauncher.launch(permissionViewModel.permission) }

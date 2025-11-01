@@ -23,6 +23,7 @@ roomRuntime = "2.8.3"
 secretsGradlePlugin = "2.0.1"
 ksp = "2.3.0"
 material3beta = "1.5.0-alpha07"
+datastorePreferences = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -58,6 +59,7 @@ google-maps-compose-utils = { module = "com.google.maps.android:maps-compose-uti
 google-maps-compose-widgets = { module = "com.google.maps.android:maps-compose-widgets", version.ref = "mapsCompose" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "composeMaterial" }
 secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

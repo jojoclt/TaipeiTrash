@@ -127,7 +127,7 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
             val data = s.data
             Log.d("TrashCanScreen", "data: ${data.size}")
             Log.i("PermissionViewModel", "locationPermission: $locationPermission")
-            if (!locationPermission) {
+            if (locationPermission == false) {
                 if (!isLaunchedOnce) {
                     permissionViewModel.setLaunchedOnce(true)
                     SideEffect { locationPermissionLauncher.launch(permissionViewModel.permission) }

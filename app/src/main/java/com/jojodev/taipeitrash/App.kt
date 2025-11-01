@@ -4,18 +4,29 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +38,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
@@ -37,20 +49,22 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import com.jojodev.taipeitrash.core.helper.plus
+import com.jojodev.taipeitrash.core.presentation.TrashMarkerIcon
+import com.jojodev.taipeitrash.core.model.TrashModel
+import com.jojodev.taipeitrash.core.model.TrashType
 import com.jojodev.taipeitrash.core.presentation.BottomSheetContent
 import com.jojodev.taipeitrash.core.presentation.TaipeiTrashBottomSheet
+import com.jojodev.taipeitrash.core.presentation.TrashDetailBottomSheet
 import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.core.presentation.TrashTab
 import com.jojodev.taipeitrash.startup.StartupViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
-import com.jojodev.taipeitrash.trashcan.data.toLatLng
 import com.jojodev.taipeitrash.trashcan.presentation.openAppSettings
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
-import com.jojodev.taipeitrash.trashcar.data.toLatLng
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
@@ -59,11 +73,15 @@ import kotlinx.coroutines.flow.mapLatest
 @Composable
 fun App(modifier: Modifier = Modifier) {
     var isExpanded by remember { mutableStateOf(false) }
-    AppContent(
-        isExpanded = isExpanded,
-        onExpandedChange = { isExpanded = it },
-        modifier = modifier
-    )
+
+    // Request permission first
+    LocationPermissionRequest {
+        AppContent(
+            isExpanded = isExpanded,
+            onExpandedChange = { isExpanded = it },
+            modifier = modifier
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalCoroutinesApi::class)
@@ -78,14 +96,23 @@ fun AppContent(
 
     val startupViewModel: StartupViewModel = hiltViewModel()
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
+    val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
 
+    // Persist across tab switches and settings navigation
+    var selectedTrashModel by remember { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
     var selectedTab by remember { mutableStateOf(TrashTab.TrashCan) }
+    var showSettings by remember { mutableStateOf(false) }
 
+    // Check if first time loading or already loaded
     when {
-        !isLoaded -> {
-            val loadingState by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
-            val loadingFloat by animateFloatAsState(loadingState)
+        isLoaded == null -> {
+            // Initial splash screen - show before checking anything
+            SplashScreen(modifier = modifier)
+        }
 
+        !isLoaded!! -> {
+            // Loading data - show progress
+            val loadingFloat by animateFloatAsState(loadingProgress)
             BoardingScreen(
                 progress = loadingFloat,
                 modifier = modifier
@@ -93,10 +120,20 @@ fun AppContent(
         }
 
         else -> {
-            val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
-            val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
-            var filteredTrashCan by remember { mutableStateOf(emptyList<TrashCan>()) }
-            var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
+            // Data loaded - show settings or main content
+            if (showSettings) {
+                com.jojodev.taipeitrash.settings.SettingsScreen(
+                    onNavigateBack = { showSettings = false },
+                    startupViewModel = startupViewModel
+                )
+            } else {
+                val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
+                val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
+                var filteredTrashCan by remember { mutableStateOf(emptyList<TrashCan>()) }
+                var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
+
+                // Track selected marker ID for highlighting
+                val selectedMarkerId = selectedTrashModel?.first?.id
 
             val cameraPositionState = rememberCameraPositionState {
                 val taipeiMain = LatLng(25.0330, 121.5654)
@@ -128,55 +165,153 @@ fun AppContent(
                     }
             }
 
+            // Set expanded by default if there's a selection
+            LaunchedEffect(selectedTrashModel) {
+                if (selectedTrashModel != null) {
+                    onExpandedChange(true)
+                }
+            }
+
+            // Clear selection when tab doesn't match selected item type
+            LaunchedEffect(selectedTab, selectedTrashModel) {
+                selectedTrashModel?.let { (_, type) ->
+                    val tabMatchesSelection = when (selectedTab) {
+                        TrashTab.TrashCan -> type == TrashType.TRASH_CAN
+                        TrashTab.GarbageTruck -> type == TrashType.GARBAGE_TRUCK
+                    }
+                    if (!tabMatchesSelection) {
+                        selectedTrashModel = null
+                    }
+                }
+            }
+
             TaipeiTrashBottomSheet(
                 isExpanded = isExpanded,
                 selectedTab = selectedTab,
                 bottomSheetContent = {
-                    BottomSheetContent()
+                    selectedTrashModel?.let { (model, type) ->
+                        TrashDetailBottomSheet(
+                            trashModel = model,
+                            trashType = type
+                        )
+                    } ?: BottomSheetContent()
                 },
                 onTabChange = {
                     selectedTab = it
-                }) { paddingValues ->
-                LocationPermissionRequest() {
+                }
+            ) { paddingValues ->
+                Box(modifier = Modifier.fillMaxSize()) {
                     TrashMap(
                         cameraPositionState = cameraPositionState,
                         contentPadding = paddingValues + WindowInsets.statusBars.asPaddingValues()
                     ) {
                         when (selectedTab) {
                             TrashTab.TrashCan -> {
-                                filteredTrashCan.fastForEach {
-                                    Marker(
-                                        state = MarkerState(position = it.toLatLng()),
-                                        title = it.address,
-                                        onClick = { _ ->
-//                                            onClick(ele)
-                                            false
-                                        },
-                                    )
+                                filteredTrashCan.fastForEach { trashCan ->
+                                    val isSelected = selectedMarkerId == trashCan.id
+
+                                    MarkerComposable(
+                                        keys = arrayOf<Any>(trashCan.id, isSelected),
+                                        state = rememberMarkerState(position = trashCan.toLatLng()),
+                                        title = trashCan.address,
+                                        alpha = if (isSelected) 1f else 0.7f,
+                                        zIndex = if (isSelected) 10f else 0f,
+                                        onClick = {
+                                            selectedTrashModel = trashCan to TrashType.TRASH_CAN
+                                            true
+                                        }
+                                    ) {
+                                        TrashMarkerIcon(
+                                            trashType = TrashType.TRASH_CAN,
+                                            modifier = Modifier.size(if (isSelected) 48.dp else 40.dp)
+                                        )
+                                    }
                                 }
                             }
 
                             TrashTab.GarbageTruck -> {
-                                filteredTrashCar.fastForEach {
-                                    Marker(
-                                        state = MarkerState(
-                                            position = it.toLatLng()
-                                        ),
-                                        title = it.address,
-                                        onClick = { _ ->
-//                                            onClick(ele)
-                                            false
-                                        },
-                                    )
+                                filteredTrashCar.fastForEach { trashCar ->
+                                    val isSelected = selectedMarkerId == trashCar.id
+
+                                    MarkerComposable(
+                                        keys = arrayOf<Any>(trashCar.id, isSelected),
+                                        state = rememberMarkerState(position = trashCar.toLatLng()),
+                                        title = trashCar.address,
+                                        alpha = if (isSelected) 1f else 0.7f,
+                                        zIndex = if (isSelected) 10f else 0f,
+                                        onClick = {
+                                            selectedTrashModel = trashCar to TrashType.GARBAGE_TRUCK
+                                            true
+                                        }
+                                    ) {
+                                        TrashMarkerIcon(
+                                            trashType = TrashType.GARBAGE_TRUCK,
+                                            modifier = Modifier.size(if (isSelected) 48.dp else 40.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+
+                    // Settings FAB - Top Left with status bar padding
+                    SmallFloatingActionButton(
+                        onClick = { showSettings = true },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(
+                                start = 16.dp,
+                                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp
+                            )
+                    ) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
                 }
+            }
             }
         }
     }
 
+}
+
+
+@Composable
+fun SplashScreen(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // App icon
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            Text(
+                text = "Taipei Trash",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }
 
 @Composable
@@ -190,21 +325,52 @@ fun BoardingScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+            modifier = Modifier.padding(32.dp)
         ) {
+            // App icon or logo placeholder
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
             Text(
-                text = "Fetching Trash Data",
-                style = androidx.compose.material3.MaterialTheme.typography.headlineSmall
+                text = "Taipei Trash",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Loading trash data...",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             CircularProgressIndicator(
                 progress = { progress },
-                modifier = Modifier.height(64.dp)
+                modifier = Modifier.height(64.dp),
+                strokeWidth = 6.dp
             )
 
             Text(
                 text = "${(progress * 100).toInt()}%",
-                style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -229,6 +395,12 @@ fun LocationPermissionRequest(
     val permissionViewModel: PermissionViewModel = viewModel { PermissionViewModel(context) }
 
     val permissionGranted by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
+
+    // Don't show UI until we've checked permission state
+    if (permissionGranted == null) {
+        // Still checking permission status
+        return
+    }
     val isLaunchedOnce by permissionViewModel.isLaunchedOnce.collectAsStateWithLifecycle()
 
     val launcher = rememberLauncherForActivityResult(
@@ -244,7 +416,7 @@ fun LocationPermissionRequest(
         }
     }
 
-    if (permissionGranted) {
+    if (permissionGranted == true) {
         onPermissionGranted()
     } else {
         // Consider it permanently denied only after we've already requested once
