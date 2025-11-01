@@ -1,6 +1,7 @@
 package com.jojodev.taipeitrash
 
 import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
@@ -8,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -47,11 +47,12 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.jojodev.taipeitrash.core.helper.plus
 import com.jojodev.taipeitrash.core.presentation.TrashMarkerIcon
 import com.jojodev.taipeitrash.core.model.TrashModel
@@ -165,6 +166,14 @@ fun AppContent(
                     }
             }
 
+            // Back handler - collapse sheet first, then exit
+            BackHandler(enabled = isExpanded || selectedTrashModel != null) {
+                when {
+                    isExpanded -> onExpandedChange(false)
+                    selectedTrashModel != null -> selectedTrashModel = null
+                }
+            }
+
             // Set expanded by default if there's a selection
             LaunchedEffect(selectedTrashModel) {
                 if (selectedTrashModel != null) {
@@ -182,6 +191,19 @@ fun AppContent(
                     if (!tabMatchesSelection) {
                         selectedTrashModel = null
                     }
+                }
+            }
+
+            // Center map on selected marker
+            LaunchedEffect(selectedTrashModel) {
+                selectedTrashModel?.let { (model, _) ->
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngZoom(
+                            model.toLatLng(),
+                            17f
+                        ),
+                        durationMs = 500
+                    )
                 }
             }
 
@@ -207,14 +229,18 @@ fun AppContent(
                     ) {
                         when (selectedTab) {
                             TrashTab.TrashCan -> {
+                                // Use fastForEach for performance; remember marker state per item
                                 filteredTrashCan.fastForEach { trashCan ->
                                     val isSelected = selectedMarkerId == trashCan.id
 
+                                    // Use the composable helper which keeps marker state updated with position changes
+                                    val markerState = rememberUpdatedMarkerState(position = trashCan.toLatLng())
+
                                     MarkerComposable(
-                                        keys = arrayOf<Any>(trashCan.id, isSelected),
-                                        state = rememberMarkerState(position = trashCan.toLatLng()),
+                                        keys = arrayOf<Any>(trashCan.id),
+                                        state = markerState,
                                         title = trashCan.address,
-                                        alpha = if (isSelected) 1f else 0.7f,
+                                        alpha = if (isSelected) 1f else 0.85f,
                                         zIndex = if (isSelected) 10f else 0f,
                                         onClick = {
                                             selectedTrashModel = trashCan to TrashType.TRASH_CAN
@@ -233,11 +259,13 @@ fun AppContent(
                                 filteredTrashCar.fastForEach { trashCar ->
                                     val isSelected = selectedMarkerId == trashCar.id
 
+                                    val markerState = rememberUpdatedMarkerState(position = trashCar.toLatLng())
+
                                     MarkerComposable(
-                                        keys = arrayOf<Any>(trashCar.id, isSelected),
-                                        state = rememberMarkerState(position = trashCar.toLatLng()),
+                                        keys = arrayOf<Any>(trashCar.id),
+                                        state = markerState,
                                         title = trashCar.address,
-                                        alpha = if (isSelected) 1f else 0.7f,
+                                        alpha = if (isSelected) 1f else 0.85f,
                                         zIndex = if (isSelected) 10f else 0f,
                                         onClick = {
                                             selectedTrashModel = trashCar to TrashType.GARBAGE_TRUCK

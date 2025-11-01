@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,6 +35,9 @@ class StartupViewModel @Inject constructor(
 
     private val _isLoaded = MutableStateFlow<Boolean?>(null) // null = initial, false = loading, true = loaded
     val isLoaded: StateFlow<Boolean?> = _isLoaded.asStateFlow()
+
+    private val _lastRefresh = MutableStateFlow("")
+    val lastRefresh: StateFlow<String> = _lastRefresh.asStateFlow()
 
     val loadingProgress: StateFlow<Float> = combine(
         _trashCarProgress,
@@ -74,6 +80,7 @@ class StartupViewModel @Inject constructor(
                 }
 
                 _isLoaded.value = true
+                _lastRefresh.value = nowString()
             } catch (e: Exception) {
                 Log.e("StartupViewModel", "Failed to preload data", e)
                 _isLoaded.value = true // Still mark as loaded to show UI
@@ -103,10 +110,16 @@ class StartupViewModel @Inject constructor(
                 }
 
                 _isLoaded.value = true
+                _lastRefresh.value = nowString()
             } catch (e: Exception) {
                 Log.e("StartupViewModel", "Failed to refresh data", e)
                 _isLoaded.value = true
             }
         }
+    }
+
+    private fun nowString(): String {
+        val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        return fmt.format(Date())
     }
 }

@@ -46,6 +46,7 @@ fun SettingsScreen(
 ) {
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
+    val lastRefresh by startupViewModel.lastRefresh.collectAsStateWithLifecycle("")
 
     Scaffold(
         topBar = {
@@ -109,6 +110,15 @@ fun SettingsScreen(
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text("Force Refresh Data")
+                        }
+
+                        if (lastRefresh.isNotEmpty()) {
+                            Text(
+                                text = "Last refreshed: $lastRefresh",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
 
                         Text(
@@ -186,5 +196,3 @@ private fun SettingItem(
         )
     }
 }
-
-
