@@ -1,37 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modern green background with subtle cityscape silhouette -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="432dp"
-    android:height="432dp"
+    android:width="200dp"
+    android:height="200dp"
     android:viewportWidth="432"
     android:viewportHeight="432">
 
-    <!-- background gradient -->
-    <gradient
-        android:type="linear"
-        android:startX="0"
-        android:startY="0"
-        android:endX="432"
-        android:endY="432"
-        android:startColor="#2E7D32"
-        android:endColor="#66BB6A" />
+    <!-- background gradient (adjusted to a slightly deeper modern green) -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M0,0h432v432h-432z" />
 
-    <!-- city/building silhouette (simple blocks) -->
+    <path
+        android:fillColor="#43A047"
+        android:pathData="M0,0h432v216H0z" android:alpha="0.5" />
+
+    <!-- softened city/building silhouette (darker but lower opacity) -->
     <path
         android:fillColor="#1B5E20"
+        android:alpha="0.85"
         android:pathData="M36,300 L120,300 L120,160 L180,160 L180,300 L264,300 L264,200 L324,200 L324,300 L396,300 L396,432 L36,432 z" />
 
-    <!-- house silhouette on the right -->
+    <!-- house silhouette (kept) -->
     <path
         android:fillColor="#2E7D32"
         android:pathData="M280,240 L320,200 L360,240 L360,312 L280,312 z" />
 
-    <!-- simple tree (trunk + canopy) -->
+    <!-- tree canopy (kept) -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M80,240 C70,220 90,200 110,210 C130,220 140,240 130,260 C120,280 90,280 80,260 z" />
+    <!-- tree trunk -->
     <path
         android:fillColor="#4CAF50"
-        android:pathData="M80,240 C70,220 90,200 110,210 C130,220 140,240 130,260 C120,280 90,280 80,260 z" />
-    <path
-        android:fillColor="#8BC34A"
         android:pathData="M100,260 L110,320 L90,320 z" />
 
 </vector>

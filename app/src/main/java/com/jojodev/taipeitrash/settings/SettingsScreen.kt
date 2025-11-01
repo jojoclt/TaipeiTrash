@@ -1,5 +1,6 @@
 package com.jojodev.taipeitrash.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,7 +48,9 @@ fun SettingsScreen(
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
     val lastRefresh by startupViewModel.lastRefresh.collectAsStateWithLifecycle("")
-
+    BackHandler {
+        onNavigateBack()
+    }
     Scaffold(
         topBar = {
             TopAppBar(
