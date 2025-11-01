@@ -103,7 +103,7 @@ fun AppContent(
                 position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
             }
 
-            LaunchedEffect(cameraPositionState.isMoving) {
+            LaunchedEffect(selectedTab, cameraPositionState.isMoving) {
                 snapshotFlow { cameraPositionState.isMoving }
                     .mapLatest { it }
                     .filter { !it }.collect {
