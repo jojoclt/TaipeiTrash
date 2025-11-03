@@ -56,6 +56,8 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.jojodev.taipeitrash.IndeterminateCircularIndicator
 import com.jojodev.taipeitrash.PermissionViewModel
 import com.jojodev.taipeitrash.core.Results
+import com.jojodev.taipeitrash.core.data.MarkerItem
+import com.jojodev.taipeitrash.core.helper.openAppSettings
 import com.jojodev.taipeitrash.core.presentation.BaseSheetScaffold
 import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.trashcan.TrashCanAction
@@ -403,38 +405,6 @@ fun TrashCanMap(
         }
     }
 
-}
-
-data class MarkerItem(
-    val itemPosition: LatLng,
-    val itemTitle: String,
-    val itemSnippet: String,
-    val itemZIndex: Float = 0f
-) : ClusterItem {
-    override fun getPosition(): LatLng =
-        itemPosition
-
-    override fun getTitle(): String =
-        itemTitle
-
-    override fun getSnippet(): String =
-        itemSnippet
-
-    override fun getZIndex(): Float =
-        itemZIndex
-}
-
-fun Activity.openAppSettings() {
-    Intent(
-        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-        Uri.fromParts("package", packageName, null)
-    ).also(::startActivity)
-    fun Activity.openAppSettings() {
-        Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", packageName, null)
-        ).also(::startActivity)
-    }
 }
 
 @Composable

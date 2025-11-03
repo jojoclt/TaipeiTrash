@@ -1,5 +1,6 @@
 package com.jojodev.taipeitrash.core.presentation
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,8 @@ fun BaseSheetScaffold(
     onExpanded: (Boolean) -> Unit = {},
     content: @Composable (PaddingValues) -> Unit = {}
 ) {
+
+    Log.d("BaseSheetScaffold", "isExpanded: $isExpanded")
 
     BackHandler(isExpanded) {
         onExpanded(false)

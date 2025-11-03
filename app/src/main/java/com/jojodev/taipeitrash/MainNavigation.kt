@@ -9,7 +9,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jojodev.taipeitrash.trashcan.presentation.TrashCanScreen
-import com.jojodev.taipeitrash.trashcar.presentation.TrashCarScreen
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -34,16 +33,6 @@ fun MainNavigation(
             }
 
             TrashCanScreen(permissionViewModel)
-        }
-        composable<TrashCarScreen> {
-            val context = LocalContext.current
-            val parent = remember(it) {
-                navController.getBackStackEntry(TrashCanScreen)
-            }
-            val permissionViewModel: PermissionViewModel = viewModel(parent) {
-                PermissionViewModel(context)
-            }
-            TrashCarScreen(permissionViewModel)
         }
     }
 }

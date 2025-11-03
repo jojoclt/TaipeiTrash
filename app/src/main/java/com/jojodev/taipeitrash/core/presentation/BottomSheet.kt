@@ -26,20 +26,28 @@ enum class TrashTab {
     TrashCan,
     GarbageTruck
 }
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TaipeiTrashBottomSheet(
     isExpanded: Boolean,
+    onExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     selectedTab: TrashTab = TrashTab.TrashCan,
     onTabChange: (TrashTab) -> Unit = {},
     bottomSheetContent: @Composable (ColumnScope.() -> Unit) = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
-    BaseSheetScaffold(isExpanded = isExpanded, modifier = modifier, bottomSheetContent = {
-        TopHeader(selectedTab = selectedTab, onTabChange = onTabChange)
-        bottomSheetContent()
-    }, content = content)
+    BaseSheetScaffold(
+        isExpanded = isExpanded,
+        modifier = modifier,
+        bottomSheetContent = {
+            TopHeader(selectedTab = selectedTab, onTabChange = onTabChange)
+            bottomSheetContent()
+        },
+        onExpanded = onExpanded,
+        content = content
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -90,6 +98,6 @@ fun TopHeader(
 @Composable
 private fun TaipeiTrashBottomSheetPreview() {
     TaipeiTrashTheme {
-        TaipeiTrashBottomSheet(isExpanded = true) {}
+        TaipeiTrashBottomSheet(isExpanded = true, onExpanded = {}) {}
     }
 }

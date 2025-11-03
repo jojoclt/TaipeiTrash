@@ -1,10 +1,13 @@
 package com.jojodev.taipeitrash
 
 import android.app.Activity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,18 +56,18 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.jojodev.taipeitrash.core.helper.openAppSettings
 import com.jojodev.taipeitrash.core.helper.plus
-import com.jojodev.taipeitrash.core.presentation.TrashMarkerIcon
 import com.jojodev.taipeitrash.core.model.TrashModel
 import com.jojodev.taipeitrash.core.model.TrashType
 import com.jojodev.taipeitrash.core.presentation.BottomSheetContent
 import com.jojodev.taipeitrash.core.presentation.TaipeiTrashBottomSheet
 import com.jojodev.taipeitrash.core.presentation.TrashDetailBottomSheet
 import com.jojodev.taipeitrash.core.presentation.TrashMap
+import com.jojodev.taipeitrash.core.presentation.TrashMarkerIcon
 import com.jojodev.taipeitrash.core.presentation.TrashTab
 import com.jojodev.taipeitrash.startup.StartupViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
-import com.jojodev.taipeitrash.trashcan.presentation.openAppSettings
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -121,34 +124,30 @@ fun AppContent(
         }
 
         else -> {
-            // Data loaded - show settings or main content
-            if (showSettings) {
-                com.jojodev.taipeitrash.settings.SettingsScreen(
-                    onNavigateBack = { showSettings = false },
-                    startupViewModel = startupViewModel
-                )
-            } else {
-                val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
-                val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
-                var filteredTrashCan by remember { mutableStateOf(emptyList<TrashCan>()) }
-                var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
+            // Data loaded - render main content always and overlay settings as animated sheet
+            var isMapLoaded by remember { mutableStateOf(false) }
 
-                // Track selected marker ID for highlighting
-                val selectedMarkerId = selectedTrashModel?.first?.id
+            val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
+            val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
+            var filteredTrashCan by remember { mutableStateOf(emptyList<TrashCan>()) }
+            var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
+
+            // Track selected marker ID for highlighting
+            val selectedMarkerId = selectedTrashModel?.first?.id
 
             val cameraPositionState = rememberCameraPositionState {
-                val taipeiMain = LatLng(25.0330, 121.5654)
-                position = CameraPosition.fromLatLngZoom(taipeiMain, 12f)
+                val taipeiMain = LatLng(25.0474, 121.5171)
+                position = CameraPosition.fromLatLngZoom(taipeiMain, 17f)
             }
 
-            LaunchedEffect(selectedTab, cameraPositionState.isMoving) {
+            LaunchedEffect(selectedTab, cameraPositionState.isMoving, isMapLoaded) {
                 snapshotFlow { cameraPositionState.isMoving }
                     .mapLatest { it }
                     .filter { !it }.collect {
                         val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
                         val zoom = cameraPositionState.position.zoom
 
-                        if (zoom >= 15) {
+                        if (zoom >= 16f) {
                             bounds?.let { bound ->
                                 when (selectedTab) {
                                     TrashTab.TrashCan -> filteredTrashCan =
@@ -164,14 +163,6 @@ fun AppContent(
                         }
 
                     }
-            }
-
-            // Back handler - collapse sheet first, then exit
-            BackHandler(enabled = isExpanded || selectedTrashModel != null) {
-                when {
-                    isExpanded -> onExpandedChange(false)
-                    selectedTrashModel != null -> selectedTrashModel = null
-                }
             }
 
             // Set expanded by default if there's a selection
@@ -207,6 +198,7 @@ fun AppContent(
                 }
             }
 
+            // Main UI with bottom sheet and map (always mounted)
             TaipeiTrashBottomSheet(
                 isExpanded = isExpanded,
                 selectedTab = selectedTab,
@@ -220,12 +212,15 @@ fun AppContent(
                 },
                 onTabChange = {
                     selectedTab = it
-                }
+                },
+                onExpanded = onExpandedChange,
+                modifier = modifier
             ) { paddingValues ->
                 Box(modifier = Modifier.fillMaxSize()) {
                     TrashMap(
                         cameraPositionState = cameraPositionState,
-                        contentPadding = paddingValues + WindowInsets.statusBars.asPaddingValues()
+                        contentPadding = paddingValues + WindowInsets.statusBars.asPaddingValues(),
+                        onMapLoaded = { isMapLoaded = true }
                     ) {
                         when (selectedTab) {
                             TrashTab.TrashCan -> {
@@ -289,14 +284,27 @@ fun AppContent(
                             .align(Alignment.TopStart)
                             .padding(
                                 start = 16.dp,
-                                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding() + 16.dp
                             )
                     ) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
             }
+
+            // Overlay settings screen on top of the map (keeps map mounted underneath)
+            AnimatedVisibility(
+                visible = showSettings,
+                enter = slideInHorizontally(initialOffsetX = { -it }, animationSpec = spring()),
+                exit = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = spring())
+            ) {
+                com.jojodev.taipeitrash.settings.SettingsScreen(
+                    onNavigateBack = { showSettings = false },
+                    startupViewModel = startupViewModel
+                )
             }
+
         }
     }
 
