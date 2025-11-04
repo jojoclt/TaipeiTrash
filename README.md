@@ -96,7 +96,7 @@ The app requires a Google Maps API key to function properly.
 apiKey=YOUR_GOOGLE_MAPS_API_KEY_HERE
 ```
 
-The `secrets-gradle-plugin` will automatically inject this into your `AndroidManifest.xml`.
+**Note**: The property name must be `apiKey` (lowercase) as referenced in the AndroidManifest.xml. The `secrets-gradle-plugin` will automatically inject this into your `AndroidManifest.xml`.
 
 #### Option B: Manual Configuration
 
