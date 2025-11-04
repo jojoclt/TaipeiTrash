@@ -140,8 +140,10 @@ fun AppContent(
             var isMapLoaded by remember { mutableStateOf(false) }
 
             // Track user location manually using PermissionViewModel
-            val permissionViewModel: PermissionViewModel = viewModel { PermissionViewModel(context) }
+            val permissionViewModel: PermissionViewModel =
+                viewModel { PermissionViewModel(context) }
             val hasLocationPermission by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
+            val wasPermissionDenied by permissionViewModel.wasPermissionDenied.collectAsStateWithLifecycle()
             var userLocation by remember { mutableStateOf<LatLng?>(null) }
             var showPermissionDialog by remember { mutableStateOf(false) }
 
@@ -380,14 +382,15 @@ fun AppContent(
                             }
                         } else {
                             // Check if permission is permanently denied
-                            val isPermanentlyDenied = activity?.let { act ->
-                                !shouldShowRequestPermissionRationale(
-                                    act,
-                                    permissionViewModel.permission
-                                )
-                            } ?: false
+                            // Permission is permanently denied if:
+                            // 1. User has denied it before (wasPermissionDenied = true from DataStore)
+                            // 2. AND shouldShowRequestPermissionRationale returns false (meaning "Don't ask again" was checked)
+                            val isPermanentlyDenied = wasPermissionDenied &&
+                                activity?.let { act ->
+                                    !shouldShowRequestPermissionRationale(act, permissionViewModel.permission)
+                                } == true
 
-                            if (isPermanentlyDenied && hasLocationPermission == false) {
+                            if (isPermanentlyDenied) {
                                 // Show dialog to go to settings
                                 showPermissionDialog = true
                             } else {
