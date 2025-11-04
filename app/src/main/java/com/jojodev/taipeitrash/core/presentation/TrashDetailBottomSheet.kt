@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jojodev.taipeitrash.core.model.TrashModel
 import com.jojodev.taipeitrash.core.model.TrashType
-import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
 
 @Composable
@@ -35,97 +35,96 @@ fun TrashDetailBottomSheet(
     trashType: TrashType,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        // Header with icon and title
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Squircle icon container
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        when (trashType) {
-                            TrashType.TRASH_CAN -> MaterialTheme.colorScheme.primaryContainer
-                            TrashType.GARBAGE_TRUCK -> MaterialTheme.colorScheme.secondaryContainer
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = when (trashType) {
-                        TrashType.TRASH_CAN -> Icons.Default.Delete
-                        TrashType.GARBAGE_TRUCK -> Icons.Default.LocalShipping
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = when (trashType) {
-                        TrashType.TRASH_CAN -> MaterialTheme.colorScheme.onPrimaryContainer
-                        TrashType.GARBAGE_TRUCK -> MaterialTheme.colorScheme.onSecondaryContainer
-                    }
-                )
-            }
-
-            Column {
-                Text(
-                    text = when (trashType) {
-                        TrashType.TRASH_CAN -> "Trash Can"
-                        TrashType.GARBAGE_TRUCK -> "Garbage Truck"
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = trashModel.address,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        HorizontalDivider()
-
-        // Details section
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DetailItem(
-                label = "District",
-                value = trashModel.district
-            )
+            // Header with icon and title
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Squircle icon container
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            when (trashType) {
+                                TrashType.TRASH_CAN -> MaterialTheme.colorScheme.primaryContainer
+                                TrashType.GARBAGE_TRUCK -> MaterialTheme.colorScheme.secondaryContainer
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = when (trashType) {
+                            TrashType.TRASH_CAN -> Icons.Default.Delete
+                            TrashType.GARBAGE_TRUCK -> Icons.Default.LocalShipping
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = when (trashType) {
+                            TrashType.TRASH_CAN -> MaterialTheme.colorScheme.onPrimaryContainer
+                            TrashType.GARBAGE_TRUCK -> MaterialTheme.colorScheme.onSecondaryContainer
+                        }
+                    )
+                }
 
-            when (trashModel) {
-                is TrashCan -> {
-                    if (trashModel.remark.isNotBlank()) {
+                Column {
+                    Text(
+                        text = when (trashType) {
+                            TrashType.TRASH_CAN -> "Trash Can"
+                            TrashType.GARBAGE_TRUCK -> "Garbage Truck"
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = trashModel.address,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            HorizontalDivider()
+
+            // Details section
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                DetailItem(
+                    label = "District",
+                    value = trashModel.district
+                )
+
+                when (trashModel) {
+                    is TrashCar -> {
                         DetailItem(
-                            label = "Remark",
-                            value = trashModel.remark
+                            label = "Arrival Time",
+                            value = trashModel.timeArrive
+                        )
+                        DetailItem(
+                            label = "Departure Time",
+                            value = trashModel.timeLeave
                         )
                     }
                 }
-                is TrashCar -> {
-                    DetailItem(
-                        label = "Arrival Time",
-                        value = trashModel.timeArrive
-                    )
-                    DetailItem(
-                        label = "Departure Time",
-                        value = trashModel.timeLeave
-                    )
-                }
-            }
 
-            DetailItem(
-                label = "Last Updated",
-                value = trashModel.importDate
-            )
+                DetailItem(
+                    label = "Last Updated",
+                    value = trashModel.importDate
+                )
+            }
         }
     }
 }
@@ -154,4 +153,3 @@ private fun DetailItem(
         )
     }
 }
-

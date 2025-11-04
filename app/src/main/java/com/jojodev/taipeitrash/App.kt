@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -36,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -103,9 +107,9 @@ fun AppContent(
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
 
     // Persist across tab switches and settings navigation
-    var selectedTrashModel by remember { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
-    var selectedTab by remember { mutableStateOf(TrashTab.TrashCan) }
-    var showSettings by remember { mutableStateOf(false) }
+    var selectedTrashModel by rememberSaveable { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
+    var selectedTab by rememberSaveable { mutableStateOf(TrashTab.TrashCan) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
 
     // Check if first time loading or already loaded
     when {
@@ -465,18 +469,31 @@ fun LocationPermissionRequest(
             modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (isPermanentlyDenied) {
-                    Text("Please enable location permission in Settings.")
-                    Spacer(Modifier.height(8.dp))
-                    Button(onClick = activity::openAppSettings) {
-                        Text("Open Settings")
-                    }
-                } else {
-                    Text("Location permission is required to display your current position.")
-                    Spacer(Modifier.height(8.dp))
-                    Button(onClick = { launcher.launch(permissionViewModel.permission) }) {
-                        Text("Grant Permission")
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (isPermanentlyDenied) {
+                        Text("Please enable location permission in Settings.")
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = activity::openAppSettings) {
+                            Text("Open Settings")
+                        }
+                    } else {
+                        Text("Location permission is required to display your current position.")
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = { launcher.launch(permissionViewModel.permission) }) {
+                            Text("Grant Permission")
+                        }
                     }
                 }
             }
