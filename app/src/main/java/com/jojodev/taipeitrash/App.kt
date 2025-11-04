@@ -273,6 +273,8 @@ fun AppContent(
                                     ) {
                                         TrashMarkerIcon(
                                             trashType = TrashType.GARBAGE_TRUCK,
+                                            arrivalTime = trashCar.timeArrive,
+                                            departureTime = trashCar.timeLeave,
                                             modifier = Modifier.size(if (isSelected) 48.dp else 32.dp)
                                         )
                                     }

@@ -58,9 +58,6 @@ fun TopHeader(
     onTabChange: (TrashTab) -> Unit = {}
 ) {
     val options = listOf("Trash Can", "Garbage Truck")
-//        val unCheckedIcons =
-//            listOf(Icons.Outlined.Work, Icons.Outlined.Restaurant, Icons.Outlined.Coffee)
-//        val checkedIcons = listOf(Icons.Filled.Work, Icons.Filled.Restaurant, Icons.Filled.Coffee)
 
     Row(
         modifier.padding(horizontal = 8.dp),

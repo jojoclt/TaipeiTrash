@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.graphics.Color
 import com.jojodev.taipeitrash.core.model.TrashModel
 import com.jojodev.taipeitrash.core.model.TrashType
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
@@ -143,6 +145,15 @@ private fun TrashDetailHeader(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            // Show arrival chip for garbage trucks when applicable
+            if (trashType == TrashType.GARBAGE_TRUCK && trashModel is TrashCar) {
+                val (color, minutes) = computeTruckMarkerState(trashModel.timeArrive, trashModel.timeLeave)
+                // Only show when minutes is not null and less than or equal to GREEN_THRESHOLD_MIN
+                if (minutes != null && minutes <= GREEN_THRESHOLD_MIN) {
+                    ArrivalChip(minutes = minutes, background = color)
+                }
+            }
         }
 
         // Directions button: open map using geo: URI (system chooses app) and fallback to web
@@ -172,6 +183,24 @@ private fun TrashDetailHeader(
                 contentDescription = "Open directions"
             )
         }
+    }
+}
+
+@Composable
+private fun ArrivalChip(minutes: Int, background: Color, modifier: Modifier = Modifier) {
+    // choose contrasting text color (white for dark backgrounds, black for light)
+    val textColor = if ((background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f) < 0.6f) Color.White else Color.Black
+
+    Box(
+        modifier = modifier
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(background)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .wrapContentWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "Arriving in ${minutes} min", color = textColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 
