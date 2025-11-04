@@ -43,7 +43,8 @@ fun TrashMap(
             // disable map toolbar and compass for a cleaner UI
             MapUiSettings(
                 mapToolbarEnabled = false,
-                compassEnabled = false
+                compassEnabled = false,
+                myLocationButtonEnabled = false
             )
         )
     }

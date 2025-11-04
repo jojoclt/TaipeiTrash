@@ -121,4 +121,7 @@ dependencies {
     implementation(platform(libs.okhttp.bom))
 
     implementation(libs.androidx.datastore.preferences)
+
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }

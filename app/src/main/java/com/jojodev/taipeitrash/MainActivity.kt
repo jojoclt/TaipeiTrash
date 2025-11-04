@@ -46,26 +46,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             TaipeiTrashTheme(dynamicColor = false) {
                 App()
-//                val navController = rememberNavController()
-//                val items = listOf(
-//                    NavigationItem("Trash Can", TrashCanScreen, Icons.Default.Delete),
-//                    NavigationItem(
-//                        "Garbage Truck",
-//                        TrashCarScreen,
-//                        ImageVector.vectorResource(R.drawable.airport_shuttle)
-//                    ),
-//                )
-//                var selected by remember { mutableStateOf(0) }
-//                Scaffold(
-//                ) { innerPadding ->
-//                    val context = LocalContext.current
-//                    val permissionViewModel: PermissionViewModel = viewModel {
-//                        PermissionViewModel(context)
-//                    }
-//
-//                    TrashCanScreen(permissionViewModel)
-////                    MainNavigation(navController, modifier = Modifier.padding(innerPadding))
-//                }
             }
         }
     }

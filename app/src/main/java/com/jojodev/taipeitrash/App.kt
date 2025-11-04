@@ -1,6 +1,7 @@
 package com.jojodev.taipeitrash
 
 import android.app.Activity
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -24,12 +25,14 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -39,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -54,9 +58,11 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
@@ -78,6 +84,8 @@ import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun App(modifier: Modifier = Modifier) {
@@ -129,6 +137,7 @@ fun AppContent(
         }
 
         else -> {
+            val context = LocalContext.current
             // Data loaded - render main content always and overlay settings as animated sheet
             var isMapLoaded by remember { mutableStateOf(false) }
 
@@ -237,11 +246,16 @@ fun AppContent(
                                     val isSelected = selectedMarkerId == trashCan.id
 
                                     // Use the composable helper which keeps marker state updated with position changes
-                                    val markerState = rememberUpdatedMarkerState(position = trashCan.toLatLng())
+                                    val markerState =
+                                        rememberUpdatedMarkerState(position = trashCan.toLatLng())
 
                                     MarkerComposable(
                                         // include id and isSelected and importDate to force recreation when important data changes
-                                        keys = arrayOf(trashCan.id, trashCan.importDate, isSelected),
+                                        keys = arrayOf(
+                                            trashCan.id,
+                                            trashCan.importDate,
+                                            isSelected
+                                        ),
                                         state = markerState,
                                         title = trashCan.address,
                                         alpha = if (isSelected) 1f else 0.85f,
@@ -264,11 +278,17 @@ fun AppContent(
                                 filteredTrashCar.fastForEach { trashCar ->
                                     val isSelected = selectedMarkerId == trashCar.id
 
-                                    val markerState = rememberUpdatedMarkerState(position = trashCar.toLatLng())
+                                    val markerState =
+                                        rememberUpdatedMarkerState(position = trashCar.toLatLng())
 
                                     MarkerComposable(
                                         // include id, arrival/departure times and selection so icon updates immediately
-                                        keys = arrayOf(trashCar.id, trashCar.timeArrive ?: "", trashCar.timeLeave ?: "", isSelected),
+                                        keys = arrayOf(
+                                            trashCar.id,
+                                            trashCar.timeArrive ?: "",
+                                            trashCar.timeLeave ?: "",
+                                            isSelected
+                                        ),
                                         state = markerState,
                                         title = trashCar.address,
                                         alpha = if (isSelected) 1f else 0.85f,
@@ -304,6 +324,16 @@ fun AppContent(
                     ) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
+
+                    MyLocationButton(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(
+                                end = 16.dp,
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding() + 16.dp
+                            )
+                    ) {            recenterToCurrentLocation(context, cameraPositionState) }
                 }
             }
 
@@ -322,6 +352,21 @@ fun AppContent(
         }
     }
 
+}
+
+suspend fun recenterToCurrentLocation(
+    context: Context,
+    cameraPositionState: CameraPositionState
+) {
+    val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+    val location = fusedClient.lastLocation.await() ?: return
+
+    cameraPositionState.animate(
+        CameraUpdateFactory.newLatLngZoom(
+            LatLng(location.latitude, location.longitude),
+            17f
+        )
+    )
 }
 
 
@@ -508,5 +553,20 @@ fun LocationPermissionRequest(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MyLocationButton(
+    modifier: Modifier = Modifier,
+    onClick: suspend () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+
+    FloatingActionButton(
+        modifier = modifier,
+        onClick = { scope.launch { onClick() } }
+    ) {
+        Icon(Icons.Default.MyLocation, contentDescription = "My Location")
     }
 }
