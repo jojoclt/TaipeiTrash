@@ -3,6 +3,7 @@ package com.jojodev.taipeitrash.core.presentation
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -28,15 +30,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.ui.graphics.Color
 import com.jojodev.taipeitrash.core.model.TrashModel
 import com.jojodev.taipeitrash.core.model.TrashType
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
+import com.jojodev.taipeitrash.ui.theme.markerTruckNeutral
+import com.jojodev.taipeitrash.ui.theme.markerTrashCan
+import androidx.compose.ui.tooling.preview.Preview
+import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import com.jojodev.taipeitrash.ui.theme.markerTruckGreen
+import com.jojodev.taipeitrash.ui.theme.markerTruckYellow
+import com.jojodev.taipeitrash.ui.theme.markerTruckRed
+import androidx.compose.foundation.layout.height
+import java.time.DayOfWeek
+import java.time.LocalDate
 
 @Composable
 fun TrashDetailBottomSheet(
@@ -148,11 +159,36 @@ private fun TrashDetailHeader(
 
             // Show arrival chip for garbage trucks when applicable
             if (trashType == TrashType.GARBAGE_TRUCK && trashModel is TrashCar) {
-                val (color, minutes) = computeTruckMarkerState(trashModel.timeArrive, trashModel.timeLeave)
-                // Only show when minutes is not null and less than or equal to GREEN_THRESHOLD_MIN
-                if (minutes != null && minutes <= GREEN_THRESHOLD_MIN) {
-                    ArrivalChip(minutes = minutes, background = color)
+                // Subscribe to the minute ticker so the header recomposes every minute
+                val currentMinute = rememberCurrentMinute()
+
+                // Special-case: on Wednesdays and Sundays there is no service -> show a specific chip
+                val today = LocalDate.now().dayOfWeek
+                if (today == DayOfWeek.WEDNESDAY || today == DayOfWeek.SUNDAY) {
+                    InfoChip(text = "Not available on Wed & Sun", background = markerTruckNeutral)
+                } else {
+                    val (color, minutes) = computeTruckMarkerState(trashModel.timeArrive, trashModel.timeLeave, currentMinute)
+                    // Show arriving minutes chip when available and within visible threshold
+                    if (minutes != null && minutes <= GREEN_THRESHOLD_MIN) {
+                        ArrivalChip(minutes = minutes, background = color)
+                    } else {
+                        // Show additional states: Collecting (blue) when active; No more for today (gray) otherwise
+                        if (minutes == null) {
+                            if (color == markerTrashCan) {
+                                InfoChip(text = "Collecting", background = color)
+                            } else {
+                                InfoChip(text = "No more for today", background = color)
+                            }
+                        }
+                    }
                 }
+            }
+
+            // Show status for Trash Can: blue = Available, gray = Unknown
+            if (trashType == TrashType.TRASH_CAN) {
+                val isUnknown = (trashModel.latitude == 0.0 && trashModel.longitude == 0.0) || trashModel.address.isBlank()
+                val target = if (isUnknown) markerTruckNeutral else markerTrashCan
+                StatusChip(isUnknown = isUnknown, background = target)
             }
         }
 
@@ -205,6 +241,43 @@ private fun ArrivalChip(minutes: Int, background: Color, modifier: Modifier = Mo
 }
 
 @Composable
+private fun InfoChip(text: String, background: Color, modifier: Modifier = Modifier) {
+    // choose contrasting text color (white for dark backgrounds, black for light)
+    val textColor = if ((background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f) < 0.6f) Color.White else Color.Black
+
+    Box(
+        modifier = modifier
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(background)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .wrapContentWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = text, color = textColor, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun StatusChip(isUnknown: Boolean, background: Color, modifier: Modifier = Modifier) {
+    val animated = animateColorAsState(targetValue = background)
+    val text = if (isUnknown) "Status: Unknown" else "Status: Available"
+    val textColor = if ((animated.value.red * 0.2126f + animated.value.green * 0.7152f + animated.value.blue * 0.0722f) < 0.6f) Color.White else Color.Black
+
+    Box(
+        modifier = modifier
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(animated.value)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .wrapContentWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = text, color = textColor, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
 private fun DetailItem(
     label: String,
     value: String,
@@ -232,4 +305,27 @@ private fun DetailItem(
 private fun String.formatTime(): String {
     if (this.length != 4) return this
     return this.take(2) + ":" + this.takeLast(2)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ArrivalChipPreview() {
+    TaipeiTrashTheme {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ArrivalChip(minutes = 120, background = markerTruckGreen)
+            Spacer(modifier = Modifier.height(8.dp))
+            ArrivalChip(minutes = 45, background = markerTruckYellow)
+            Spacer(modifier = Modifier.height(8.dp))
+            ArrivalChip(minutes = 10, background = markerTruckRed)
+            Spacer(modifier = Modifier.height(8.dp))
+            ArrivalChip(minutes = 1, background = markerTruckNeutral)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // New InfoChip preview states
+            InfoChip(text = "Collecting", background = markerTrashCan)
+            Spacer(modifier = Modifier.height(8.dp))
+            InfoChip(text = "No more for today", background = markerTruckNeutral)
+        }
+    }
 }

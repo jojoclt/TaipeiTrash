@@ -150,6 +150,11 @@ fun TrashCanScreen(permissionViewModel: PermissionViewModel = viewModel()) {
             } else {
                 var isExpanded by remember { mutableStateOf(false) }
                 var selectedTrash by remember { mutableStateOf<TrashCan?>(null) }
+                LaunchedEffect(isExpanded) {
+                    if (!isExpanded) {
+                        selectedTrash = null
+                    }
+                }
                 BaseSheetScaffold(
                     isExpanded = isExpanded,
                     onExpanded = { isExpanded = it },

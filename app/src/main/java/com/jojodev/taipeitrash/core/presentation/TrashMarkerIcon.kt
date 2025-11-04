@@ -1,5 +1,6 @@
 package com.jojodev.taipeitrash.core.presentation
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,24 +15,26 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jojodev.taipeitrash.core.model.TrashType
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import com.jojodev.taipeitrash.ui.theme.markerTrashCan
+import com.jojodev.taipeitrash.ui.theme.markerTruckGreen
+import com.jojodev.taipeitrash.ui.theme.markerTruckNeutral
+import com.jojodev.taipeitrash.ui.theme.markerTruckRed
+import com.jojodev.taipeitrash.ui.theme.markerTruckYellow
+import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
-private val TRASH_CAN_COLOR = Color(0xFF2196F3) // Blue (changed per request)
-private val TRUCK_GREEN = Color(0xFF4CAF50)
-private val TRUCK_YELLOW = Color(0xFFFFC107)
-private val TRUCK_RED = Color(0xFFF44336)
-private val TRUCK_NEUTRAL = Color(0xFF9E9E9E)
 
 // Thresholds (minutes) - made public so other files can read them
 const val GREEN_THRESHOLD_MIN = 60 // > 60 min => green
@@ -56,35 +59,69 @@ private fun parseTimeHHmmOrNull(raw: String?): LocalTime? {
  * Returns Pair(color, minutesToArrivalNullable).
  * - color: the marker background color (neutral when no data or special conditions)
  * - minutesToArrival: minutes until arrival (positive), or null when not applicable
+ *
+ * Optionally accept `currentTime` so callers can pass a minute-aligned time for deterministic results
+ * Behavior tweak: if current time is after arrival but before departure -> show blue (markerTrashCan)
  */
-fun computeTruckMarkerState(arrivalTime: String?, departureTime: String?): Pair<Color, Int?> {
+fun computeTruckMarkerState(arrivalTime: String?, departureTime: String?, currentTime: LocalTime? = null): Pair<Color, Int?> {
     // Neutral on Wed/Sun
     val dow = LocalDate.now().dayOfWeek
     if (dow == DayOfWeek.WEDNESDAY || dow == DayOfWeek.SUNDAY) {
-        return Pair(TRUCK_NEUTRAL, null)
+        return Pair(markerTruckNeutral, null)
     }
 
-    val now = LocalTime.now()
+    val now = currentTime ?: LocalTime.now()
+
+    val arrival = parseTimeHHmmOrNull(arrivalTime)
+    val departure = parseTimeHHmmOrNull(departureTime)
+
+    // If both arrival and departure available, and now is between arrival and departure => active (blue)
+    if (arrival != null && departure != null) {
+        var minutesToArrival = ChronoUnit.MINUTES.between(now, arrival).toInt()
+        var minutesToDeparture = ChronoUnit.MINUTES.between(now, departure).toInt()
+
+        // normalize negative arrival to next day for arrival comparison
+        if (minutesToArrival < 0) minutesToArrival += 24 * 60
+        // don't normalize departure; if departure is earlier and minutesToDeparture < 0, then it's already passed
+
+        // if arrival already passed (minutesToArrival <= 0 in raw check) and departure in future
+        val rawMinutesToArrival = ChronoUnit.MINUTES.between(now, arrival).toInt()
+        if (rawMinutesToArrival <= 0 && minutesToDeparture > 0) {
+            // currently active (between arrival and departure)
+            return Pair(markerTrashCan, null)
+        }
+    }
 
     // If departure provided and already passed -> neutral
-    val departure = parseTimeHHmmOrNull(departureTime)
     if (departure != null) {
         val minutesToDeparture = ChronoUnit.MINUTES.between(now, departure).toInt()
-        if (minutesToDeparture < 0) return Pair(TRUCK_NEUTRAL, null)
+        if (minutesToDeparture < 0) return Pair(markerTruckNeutral, null)
     }
 
-    val arrival = parseTimeHHmmOrNull(arrivalTime) ?: return Pair(TRUCK_NEUTRAL, null)
+    // If arrival absent -> neutral
+    val arrivalNonNull = arrival ?: return Pair(markerTruckNeutral, null)
 
-    var minutesToArrival = ChronoUnit.MINUTES.between(now, arrival).toInt()
+    var minutesToArrival = ChronoUnit.MINUTES.between(now, arrivalNonNull).toInt()
     if (minutesToArrival < 0) minutesToArrival += 24 * 60 // assume next day
 
     val color = when {
-        minutesToArrival > GREEN_THRESHOLD_MIN -> TRUCK_GREEN
-        minutesToArrival <= RED_THRESHOLD_MIN -> TRUCK_RED
-        else -> TRUCK_YELLOW
+        minutesToArrival > GREEN_THRESHOLD_MIN -> markerTruckGreen
+        minutesToArrival <= RED_THRESHOLD_MIN -> markerTruckRed
+        else -> markerTruckYellow
     }
 
     return Pair(color, minutesToArrival)
+}
+
+/**
+ * Compose helper to get the current LocalTime aligned to the minute boundary.
+ * Collects the shared `minuteTicker` flow and returns LocalTime for recomposition.
+ */
+@Composable
+fun rememberCurrentMinute(): LocalTime {
+    val minuteFlow = minuteTicker.map { it.toLocalTime() }
+    val current by minuteFlow.collectAsStateWithLifecycle(initialValue = LocalTime.now())
+    return current
 }
 
 @Composable
@@ -92,70 +129,29 @@ fun TrashMarkerIcon(
     trashType: TrashType,
     modifier: Modifier = Modifier,
     arrivalTime: String? = null, // optional, format like "2003" (HHmm)
-    departureTime: String? = null // optional; if already passed -> neutral
+    departureTime: String? = null, // optional; if already passed -> neutral
+    currentMinute: LocalTime? = null // optional injector so callers can subscribe once
 ) {
-    val backgroundColor = when (trashType) {
-        TrashType.TRASH_CAN -> TRASH_CAN_COLOR
-        TrashType.GARBAGE_TRUCK -> run {
-            // Neutral color on Wednesday or Sunday
-            val dow = LocalDate.now().dayOfWeek
-            if (dow == DayOfWeek.WEDNESDAY || dow == DayOfWeek.SUNDAY) {
-                TRUCK_NEUTRAL
-            } else {
-                // If departureTime is provided and already passed (now > departure) -> neutral
-                val departure = parseTimeHHmmOrNull(departureTime)
-                val now = LocalTime.now()
-                if (departure != null) {
-                    val minutesToDeparture = ChronoUnit.MINUTES.between(now, departure).toInt()
-                    if (minutesToDeparture < 0) {
-                        // departure earlier today -> considered already passed
-                        TRUCK_NEUTRAL
-                    } else {
-                        // Otherwise, compute based on arrivalTime if available
-                        val arrival = parseTimeHHmmOrNull(arrivalTime)
-                        if (arrival == null) {
-                            TRUCK_NEUTRAL
-                        } else {
-                            var minutesToArrival = ChronoUnit.MINUTES.between(now, arrival).toInt()
-                            if (minutesToArrival < 0) {
-                                // arrival likely on next day
-                                minutesToArrival += 24 * 60
-                            }
+    // Ensure recomposition each minute by reading current minute; prefer provided minute
+    val minute = currentMinute ?: rememberCurrentMinute()
 
-                            when {
-                                minutesToArrival > GREEN_THRESHOLD_MIN -> TRUCK_GREEN
-                                minutesToArrival <= RED_THRESHOLD_MIN -> TRUCK_RED
-                                else -> TRUCK_YELLOW
-                            }
-                        }
-                    }
-                } else {
-                    // No departure provided - proceed with arrival
-                    val arrival = parseTimeHHmmOrNull(arrivalTime)
-                    if (arrival == null) {
-                        TRUCK_NEUTRAL
-                    } else {
-                        var minutesToArrival = ChronoUnit.MINUTES.between(now, arrival).toInt()
-                        if (minutesToArrival < 0) {
-                            minutesToArrival += 24 * 60
-                        }
-
-                        when {
-                            minutesToArrival > GREEN_THRESHOLD_MIN -> TRUCK_GREEN
-                            minutesToArrival <= RED_THRESHOLD_MIN -> TRUCK_RED
-                            else -> TRUCK_YELLOW
-                        }
-                    }
-                }
-            }
-        }
+    // Use computeTruckMarkerState passing the minute so the parsing uses aligned time
+    val (targetColor, _) = if (trashType == TrashType.GARBAGE_TRUCK) {
+        computeTruckMarkerState(arrivalTime, departureTime, minute)
+    } else {
+        Pair(markerTrashCan, null)
     }
+
+    val initial = if (trashType == TrashType.TRASH_CAN) markerTrashCan else targetColor
+
+    // animate between colors smoothly
+    val animatedColor by animateColorAsState(targetValue = if (trashType == TrashType.TRASH_CAN) markerTrashCan else targetColor)
 
     Box(
         modifier = modifier
             .size(40.dp)
             .background(
-                color = backgroundColor,
+                color = animatedColor,
                 shape = CircleShape
             )
             .padding(8.dp),
@@ -217,6 +213,16 @@ fun TrashMarkerIconPreview() {
                 TrashMarkerIcon(trashType = TrashType.GARBAGE_TRUCK, modifier = Modifier.size(40.dp))
                 Spacer(Modifier.width(12.dp))
                 androidx.compose.material3.Text("Truck (neutral)")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Simulate active (between arrival and departure): arrival now-5min, departure +30min -> blue
+                val now = LocalTime.now()
+                val arr = now.minusMinutes(5).format(PARSE_HHMM)
+                val leave = now.plusMinutes(30).format(PARSE_HHMM)
+                TrashMarkerIcon(trashType = TrashType.GARBAGE_TRUCK, arrivalTime = arr, departureTime = leave, modifier = Modifier.size(40.dp))
+                Spacer(Modifier.width(12.dp))
+                androidx.compose.material3.Text("Truck (active - blue)")
             }
         }
     }

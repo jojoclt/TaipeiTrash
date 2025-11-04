@@ -1,4 +1,5 @@
 package com.jojodev.taipeitrash.ui.theme
+
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF006D34)
@@ -217,9 +218,9 @@ val surfaceContainerDarkHighContrast = Color(0xFF2C322C)
 val surfaceContainerHighDarkHighContrast = Color(0xFF373D37)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF424842)
 
-
-
-
-
-
-
+// Marker colors (centralized)
+val markerTrashCan = Color(0xFF2196F3) // blue
+val markerTruckGreen = Color(0xFF4CAF50)
+val markerTruckYellow = Color(0xFFFFC107)
+val markerTruckRed = Color(0xFFF44336)
+val markerTruckNeutral = Color(0xFF9E9E9E)

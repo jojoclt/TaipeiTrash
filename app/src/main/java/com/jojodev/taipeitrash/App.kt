@@ -70,6 +70,7 @@ import com.jojodev.taipeitrash.core.presentation.TrashDetailBottomSheet
 import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.core.presentation.TrashMarkerIcon
 import com.jojodev.taipeitrash.core.presentation.TrashTab
+import com.jojodev.taipeitrash.core.presentation.rememberCurrentMinute
 import com.jojodev.taipeitrash.startup.StartupViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
@@ -226,6 +227,9 @@ fun AppContent(
                         contentPadding = paddingValues + WindowInsets.statusBars.asPaddingValues(),
                         onMapLoaded = { isMapLoaded = true }
                     ) {
+                        // Subscribe once per composition to the minute ticker and pass down to markers
+                        val currentMinute = rememberCurrentMinute()
+
                         when (selectedTab) {
                             TrashTab.TrashCan -> {
                                 // Use fastForEach for performance; remember marker state per item
@@ -236,7 +240,8 @@ fun AppContent(
                                     val markerState = rememberUpdatedMarkerState(position = trashCan.toLatLng())
 
                                     MarkerComposable(
-                                        keys = arrayOf(trashCan.id),
+                                        // include id and isSelected and importDate to force recreation when important data changes
+                                        keys = arrayOf(trashCan.id, trashCan.importDate, isSelected),
                                         state = markerState,
                                         title = trashCan.address,
                                         alpha = if (isSelected) 1f else 0.85f,
@@ -248,6 +253,7 @@ fun AppContent(
                                     ) {
                                         TrashMarkerIcon(
                                             trashType = TrashType.TRASH_CAN,
+                                            currentMinute = currentMinute,
                                             modifier = Modifier.size(if (isSelected) 48.dp else 32.dp)
                                         )
                                     }
@@ -261,7 +267,8 @@ fun AppContent(
                                     val markerState = rememberUpdatedMarkerState(position = trashCar.toLatLng())
 
                                     MarkerComposable(
-                                        keys = arrayOf(trashCar.id),
+                                        // include id, arrival/departure times and selection so icon updates immediately
+                                        keys = arrayOf(trashCar.id, trashCar.timeArrive ?: "", trashCar.timeLeave ?: "", isSelected),
                                         state = markerState,
                                         title = trashCar.address,
                                         alpha = if (isSelected) 1f else 0.85f,
@@ -275,6 +282,7 @@ fun AppContent(
                                             trashType = TrashType.GARBAGE_TRUCK,
                                             arrivalTime = trashCar.timeArrive,
                                             departureTime = trashCar.timeLeave,
+                                            currentMinute = currentMinute,
                                             modifier = Modifier.size(if (isSelected) 48.dp else 32.dp)
                                         )
                                     }
