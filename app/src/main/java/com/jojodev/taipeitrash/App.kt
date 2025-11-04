@@ -107,7 +107,7 @@ fun AppContent(
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
 
     // Persist across tab switches and settings navigation
-    var selectedTrashModel by rememberSaveable { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
+    var selectedTrashModel by remember { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
     var selectedTab by rememberSaveable { mutableStateOf(TrashTab.TrashCan) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
 
@@ -236,7 +236,7 @@ fun AppContent(
                                     val markerState = rememberUpdatedMarkerState(position = trashCan.toLatLng())
 
                                     MarkerComposable(
-                                        keys = arrayOf<Any>(trashCan.id),
+                                        keys = arrayOf(trashCan.id),
                                         state = markerState,
                                         title = trashCan.address,
                                         alpha = if (isSelected) 1f else 0.85f,
@@ -248,7 +248,7 @@ fun AppContent(
                                     ) {
                                         TrashMarkerIcon(
                                             trashType = TrashType.TRASH_CAN,
-                                            modifier = Modifier.size(if (isSelected) 48.dp else 40.dp)
+                                            modifier = Modifier.size(if (isSelected) 48.dp else 32.dp)
                                         )
                                     }
                                 }
@@ -261,7 +261,7 @@ fun AppContent(
                                     val markerState = rememberUpdatedMarkerState(position = trashCar.toLatLng())
 
                                     MarkerComposable(
-                                        keys = arrayOf<Any>(trashCar.id),
+                                        keys = arrayOf(trashCar.id),
                                         state = markerState,
                                         title = trashCar.address,
                                         alpha = if (isSelected) 1f else 0.85f,
@@ -273,7 +273,7 @@ fun AppContent(
                                     ) {
                                         TrashMarkerIcon(
                                             trashType = TrashType.GARBAGE_TRUCK,
-                                            modifier = Modifier.size(if (isSelected) 48.dp else 40.dp)
+                                            modifier = Modifier.size(if (isSelected) 48.dp else 32.dp)
                                         )
                                     }
                                 }

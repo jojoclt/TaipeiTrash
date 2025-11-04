@@ -32,11 +32,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jojodev.taipeitrash.BuildConfig
 import com.jojodev.taipeitrash.startup.StartupViewModel
+import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,12 +47,41 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     startupViewModel: StartupViewModel = hiltViewModel()
 ) {
+    // Collect state inside this top-level composable (viewModel is obtained here)
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
     val lastRefresh by startupViewModel.lastRefresh.collectAsStateWithLifecycle("")
+    val trashCanLast by startupViewModel.trashCanLastRefresh.collectAsStateWithLifecycle("")
+    val trashCarLast by startupViewModel.trashCarLastRefresh.collectAsStateWithLifecycle("")
+
     BackHandler {
         onNavigateBack()
     }
+
+    SettingsScreenContent(
+        onNavigateBack = onNavigateBack,
+        isLoaded = isLoaded,
+        loadingProgress = loadingProgress,
+        lastRefresh = lastRefresh,
+        trashCanLast = trashCanLast,
+        trashCarLast = trashCarLast,
+        onForceRefresh = startupViewModel::forceRefresh,
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreenContent(
+    onNavigateBack: () -> Unit,
+    isLoaded: Boolean?,
+    loadingProgress: Float,
+    lastRefresh: String,
+    trashCanLast: String,
+    trashCarLast: String,
+    onForceRefresh: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -107,7 +138,7 @@ fun SettingsScreen(
                         }
                     } else {
                         Button(
-                            onClick = { startupViewModel.forceRefresh() },
+                            onClick = onForceRefresh,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
@@ -122,6 +153,25 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 8.dp)
                             )
+                        }
+
+                        // Show per-source last refresh times when available
+                        if (trashCanLast.isNotEmpty() || trashCarLast.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+
+                            if (trashCanLast.isNotEmpty()) {
+                                SettingItem(
+                                    label = "Trash cans",
+                                    value = trashCanLast
+                                )
+                            }
+
+                            if (trashCarLast.isNotEmpty()) {
+                                SettingItem(
+                                    label = "Garbage trucks",
+                                    value = trashCarLast
+                                )
+                            }
                         }
 
                         Text(
@@ -196,6 +246,22 @@ private fun SettingItem(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    TaipeiTrashTheme {
+        SettingsScreenContent(
+            onNavigateBack = {},
+            isLoaded = true,
+            loadingProgress = 1f,
+            lastRefresh = "2025-11-04 12:00",
+            trashCanLast = "2025-11-04 11:50",
+            trashCarLast = "2025-11-04 11:55",
+            onForceRefresh = {}
         )
     }
 }

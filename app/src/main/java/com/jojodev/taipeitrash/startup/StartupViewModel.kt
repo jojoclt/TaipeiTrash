@@ -15,10 +15,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -33,7 +36,8 @@ class StartupViewModel @Inject constructor(
     private val _trashCarProgress = MutableStateFlow(0f)
     private val _trashCanProgress = MutableStateFlow(0f)
 
-    private val _isLoaded = MutableStateFlow<Boolean?>(null) // null = initial, false = loading, true = loaded
+    private val _isLoaded =
+        MutableStateFlow<Boolean?>(null) // null = initial, false = loading, true = loaded
     val isLoaded: StateFlow<Boolean?> = _isLoaded.asStateFlow()
 
     private val _lastRefresh = MutableStateFlow("")
@@ -58,6 +62,34 @@ class StartupViewModel @Inject constructor(
     private val _trashCan = MutableStateFlow(emptyList<TrashCan>())
     val trashCan: StateFlow<List<TrashCan>> = _trashCan.asStateFlow()
 
+    // Derived flows that expose the first item's importDate (or empty string)
+    val trashCarLastRefresh: StateFlow<String> = trashCar
+        .map { list ->
+            val datetime = if (list.isNotEmpty()) list.first().importDate else ""
+            datetime.parseDateTime()
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ""
+        )
+
+    val trashCanLastRefresh: StateFlow<String> = trashCan
+        .map { list ->
+            val datetime = if (list.isNotEmpty()) list.first().importDate else ""
+            datetime.parseDateTime()
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ""
+        )
+
+    private fun String.parseDateTime() = runCatching {
+        LocalDateTime.parse(this.replace(' ', 'T'))
+            .format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+    }.getOrElse { "-" }
+
     private fun loadData() {
         viewModelScope.launch {
             try {
@@ -67,15 +99,17 @@ class StartupViewModel @Inject constructor(
                 // Repository will handle local cache vs network fetch
                 coroutineScope {
                     launch {
-                        _trashCar.value = trashCarRepository.getTrashCars(forceUpdate = false) { progress ->
-                            _trashCarProgress.value = progress
-                        }
+                        _trashCar.value =
+                            trashCarRepository.getTrashCars(forceUpdate = false) { progress ->
+                                _trashCarProgress.value = progress
+                            }
                     }
 
                     launch {
-                        _trashCan.value = trashCanRepository.getTrashCans(forceUpdate = false) { progress ->
-                            _trashCanProgress.value = progress
-                        }
+                        _trashCan.value =
+                            trashCanRepository.getTrashCans(forceUpdate = false) { progress ->
+                                _trashCanProgress.value = progress
+                            }
                     }
                 }
 
@@ -97,15 +131,17 @@ class StartupViewModel @Inject constructor(
 
                 coroutineScope {
                     launch {
-                        _trashCar.value = trashCarRepository.getTrashCars(forceUpdate = true) { progress ->
-                            _trashCarProgress.value = progress
-                        }
+                        _trashCar.value =
+                            trashCarRepository.getTrashCars(forceUpdate = true) { progress ->
+                                _trashCarProgress.value = progress
+                            }
                     }
 
                     launch {
-                        _trashCan.value = trashCanRepository.getTrashCans(forceUpdate = true) { progress ->
-                            _trashCanProgress.value = progress
-                        }
+                        _trashCan.value =
+                            trashCanRepository.getTrashCans(forceUpdate = true) { progress ->
+                                _trashCanProgress.value = progress
+                            }
                     }
                 }
 
