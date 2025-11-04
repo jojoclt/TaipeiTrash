@@ -44,7 +44,8 @@ fun TrashMap(
             MapUiSettings(
                 mapToolbarEnabled = false,
                 compassEnabled = false,
-                myLocationButtonEnabled = false
+                myLocationButtonEnabled = false,
+                zoomControlsEnabled = false
             )
         )
     }

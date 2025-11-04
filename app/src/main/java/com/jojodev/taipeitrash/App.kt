@@ -80,6 +80,7 @@ import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import com.jojodev.taipeitrash.ui.components.MyLocationButton
 import com.jojodev.taipeitrash.ui.components.PermissionDialog
 import com.jojodev.taipeitrash.ui.components.UserLocationMarker
+import com.jojodev.taipeitrash.ui.components.VerticalZoomControls
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
@@ -386,9 +387,12 @@ fun AppContent(
                             // 1. User has denied it before (wasPermissionDenied = true from DataStore)
                             // 2. AND shouldShowRequestPermissionRationale returns false (meaning "Don't ask again" was checked)
                             val isPermanentlyDenied = wasPermissionDenied &&
-                                activity?.let { act ->
-                                    !shouldShowRequestPermissionRationale(act, permissionViewModel.permission)
-                                } == true
+                                    activity?.let { act ->
+                                        !shouldShowRequestPermissionRationale(
+                                            act,
+                                            permissionViewModel.permission
+                                        )
+                                    } == true
 
                             if (isPermanentlyDenied) {
                                 // Show dialog to go to settings
@@ -399,6 +403,28 @@ fun AppContent(
                             }
                         }
                     }
+
+                    // Vertical Zoom Controls
+                    VerticalZoomControls(
+                        onZoomIn = {
+                            scope.launch {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.zoomIn()
+                                )
+                            }
+                        },
+                        onZoomOut = {
+                            scope.launch {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.zoomOut()
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(paddingValues)
+                            .padding(16.dp)
+                    )
 
                     // Permission Dialog
                     if (showPermissionDialog) {
