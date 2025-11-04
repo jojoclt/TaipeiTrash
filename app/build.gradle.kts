@@ -19,8 +19,8 @@ android {
         applicationId = "com.jojodev.taipeitrash"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.3"
+        versionCode = 7
+        versionName = "1.0.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
