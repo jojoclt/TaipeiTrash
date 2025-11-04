@@ -1,5 +1,7 @@
 package com.jojodev.taipeitrash
 
+import BoardingScreen
+import SplashScreen
 import android.app.Activity
 import android.content.Context
 import androidx.activity.compose.LocalActivity
@@ -10,8 +12,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,15 +23,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +45,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
@@ -79,6 +74,9 @@ import com.jojodev.taipeitrash.core.presentation.rememberCurrentMinute
 import com.jojodev.taipeitrash.startup.StartupViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
+import com.jojodev.taipeitrash.ui.components.MyLocationButton
+import com.jojodev.taipeitrash.ui.components.PermissionDialog
+import com.jojodev.taipeitrash.ui.components.UserLocationMarker
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
@@ -115,7 +113,6 @@ fun AppContent(
     var selectedTab by rememberSaveable { mutableStateOf(TrashTab.TrashCan) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
 
-    // Check if first time loading or already loaded
     when {
         isLoaded == null -> {
             // Initial splash screen - show before checking anything
@@ -441,108 +438,6 @@ suspend fun getCurrentLocation(context: Context): LatLng? {
 }
 
 
-@Composable
-fun SplashScreen(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // App icon
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Text(
-                text = "Taipei Trash",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-fun BoardingScreen(
-    progress: Float,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            // App icon or logo placeholder
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Text(
-                text = "Taipei Trash",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Loading trash data...",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            CircularProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.height(64.dp),
-                strokeWidth = 6.dp
-            )
-
-            Text(
-                text = "${(progress * 100).toInt()}%",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-
-}
-
 @Preview
 @Composable
 private fun AppContentPreview() {
@@ -551,131 +446,6 @@ private fun AppContentPreview() {
     }
 }
 
-@Composable
-fun MyLocationButton(
-    hasPermission: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    SmallFloatingActionButton(
-        modifier = modifier,
-        onClick = onClick,
-        containerColor = if (hasPermission) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            MaterialTheme.colorScheme.errorContainer
-        },
-        contentColor = if (hasPermission) {
-            MaterialTheme.colorScheme.onSecondaryContainer
-        } else {
-            MaterialTheme.colorScheme.onErrorContainer
-        }
-    ) {
-        Icon(Icons.Default.MyLocation, contentDescription = "My Location")
-    }
-}
-
-@Composable
-fun PermissionDialog(
-    onDismiss: () -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
-                Text(
-                    text = "Location Permission Required",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                    text = "Please enable location permission in Settings to see your current location on the map.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-
-                androidx.compose.foundation.layout.Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    androidx.compose.material3.OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancel")
-                    }
-
-                    Button(
-                        onClick = onOpenSettings,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Open Settings")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun UserLocationMarker(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        // Outer circle (light blue with transparency)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                    shape = CircleShape
-                )
-        )
-
-        // Inner circle (solid blue with white border)
-        Box(
-            modifier = Modifier
-                .size(16.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = CircleShape
-                    )
-            )
-        }
-    }
-}
 
 @Composable
 fun LocationPermissionRequest(
