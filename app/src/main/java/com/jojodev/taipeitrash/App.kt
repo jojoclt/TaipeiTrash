@@ -2,6 +2,7 @@ package com.jojodev.taipeitrash
 
 import android.app.Activity
 import android.content.Context
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -32,7 +33,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -62,7 +62,6 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
@@ -91,14 +90,12 @@ import kotlinx.coroutines.tasks.await
 fun App(modifier: Modifier = Modifier) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    // Request permission first
-    LocationPermissionRequest {
-        AppContent(
-            isExpanded = isExpanded,
-            onExpandedChange = { isExpanded = it },
-            modifier = modifier
-        )
-    }
+    // Show app content directly without requesting permission
+    AppContent(
+        isExpanded = isExpanded,
+        onExpandedChange = { isExpanded = it },
+        modifier = modifier
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalCoroutinesApi::class)
@@ -108,8 +105,6 @@ fun AppContent(
     onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-//    val trashViewModel: TrashCanViewModel = hiltViewModel()
-//    val uiState by trashViewModel.uiState.collectAsStateWithLifecycle()
 
     val startupViewModel: StartupViewModel = hiltViewModel()
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
@@ -138,8 +133,17 @@ fun AppContent(
 
         else -> {
             val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            val activity = LocalActivity.current
+
             // Data loaded - render main content always and overlay settings as animated sheet
             var isMapLoaded by remember { mutableStateOf(false) }
+
+            // Track user location manually using PermissionViewModel
+            val permissionViewModel: PermissionViewModel = viewModel { PermissionViewModel(context) }
+            val hasLocationPermission by permissionViewModel.permissionGranted.collectAsStateWithLifecycle()
+            var userLocation by remember { mutableStateOf<LatLng?>(null) }
+            var showPermissionDialog by remember { mutableStateOf(false) }
 
             val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
             val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
@@ -239,6 +243,17 @@ fun AppContent(
                         // Subscribe once per composition to the minute ticker and pass down to markers
                         val currentMinute = rememberCurrentMinute()
 
+                        // Show custom user location marker if location is available
+                        userLocation?.let { location ->
+                            MarkerComposable(
+                                state = rememberUpdatedMarkerState(position = location),
+                                title = "My Location",
+                                zIndex = 100f // Always on top
+                            ) {
+                                UserLocationMarker(modifier = Modifier.size(40.dp))
+                            }
+                        }
+
                         when (selectedTab) {
                             TrashTab.TrashCan -> {
                                 // Use fastForEach for performance; remember marker state per item
@@ -285,8 +300,8 @@ fun AppContent(
                                         // include id, arrival/departure times and selection so icon updates immediately
                                         keys = arrayOf(
                                             trashCar.id,
-                                            trashCar.timeArrive ?: "",
-                                            trashCar.timeLeave ?: "",
+                                            trashCar.timeArrive,
+                                            trashCar.timeLeave,
                                             isSelected
                                         ),
                                         state = markerState,
@@ -325,7 +340,26 @@ fun AppContent(
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
 
+                    // Location permission launcher
+                    val locationPermissionLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.RequestPermission()
+                    ) { isGranted ->
+                        permissionViewModel.setPermissionGranted(isGranted)
+                        if (isGranted) {
+                            scope.launch {
+                                val location = getCurrentLocation(context)
+                                location?.let {
+                                    userLocation = it
+                                    cameraPositionState.animate(
+                                        CameraUpdateFactory.newLatLngZoom(it, 17f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     MyLocationButton(
+                        hasPermission = hasLocationPermission == true,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(
@@ -333,7 +367,46 @@ fun AppContent(
                                 top = WindowInsets.statusBars.asPaddingValues()
                                     .calculateTopPadding() + 16.dp
                             )
-                    ) {            recenterToCurrentLocation(context, cameraPositionState) }
+                    ) {
+                        if (hasLocationPermission == true) {
+                            scope.launch {
+                                val location = getCurrentLocation(context)
+                                location?.let {
+                                    userLocation = it
+                                    cameraPositionState.animate(
+                                        CameraUpdateFactory.newLatLngZoom(it, 17f)
+                                    )
+                                }
+                            }
+                        } else {
+                            // Check if permission is permanently denied
+                            val isPermanentlyDenied = activity?.let { act ->
+                                !shouldShowRequestPermissionRationale(
+                                    act,
+                                    permissionViewModel.permission
+                                )
+                            } ?: false
+
+                            if (isPermanentlyDenied && hasLocationPermission == false) {
+                                // Show dialog to go to settings
+                                showPermissionDialog = true
+                            } else {
+                                // Request permission normally
+                                locationPermissionLauncher.launch(permissionViewModel.permission)
+                            }
+                        }
+                    }
+
+                    // Permission Dialog
+                    if (showPermissionDialog) {
+                        PermissionDialog(
+                            onDismiss = { showPermissionDialog = false },
+                            onOpenSettings = {
+                                activity?.openAppSettings()
+                                showPermissionDialog = false
+                            }
+                        )
+                    }
                 }
             }
 
@@ -354,19 +427,14 @@ fun AppContent(
 
 }
 
-suspend fun recenterToCurrentLocation(
-    context: Context,
-    cameraPositionState: CameraPositionState
-) {
-    val fusedClient = LocationServices.getFusedLocationProviderClient(context)
-    val location = fusedClient.lastLocation.await() ?: return
-
-    cameraPositionState.animate(
-        CameraUpdateFactory.newLatLngZoom(
-            LatLng(location.latitude, location.longitude),
-            17f
-        )
-    )
+suspend fun getCurrentLocation(context: Context): LatLng? {
+    return try {
+        val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+        val location = fusedClient.lastLocation.await() ?: return null
+        LatLng(location.latitude, location.longitude)
+    } catch (e: SecurityException) {
+        null
+    }
 }
 
 
@@ -481,6 +549,132 @@ private fun AppContentPreview() {
 }
 
 @Composable
+fun MyLocationButton(
+    hasPermission: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    SmallFloatingActionButton(
+        modifier = modifier,
+        onClick = onClick,
+        containerColor = if (hasPermission) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.errorContainer
+        },
+        contentColor = if (hasPermission) {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        } else {
+            MaterialTheme.colorScheme.onErrorContainer
+        }
+    ) {
+        Icon(Icons.Default.MyLocation, contentDescription = "My Location")
+    }
+}
+
+@Composable
+fun PermissionDialog(
+    onDismiss: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Location Permission Required",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Please enable location permission in Settings to see your current location on the map.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = onOpenSettings,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Open Settings")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun UserLocationMarker(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        // Outer circle (light blue with transparency)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    shape = CircleShape
+                )
+        )
+
+        // Inner circle (solid blue with white border)
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape
+                    )
+            )
+        }
+    }
+}
+
+@Composable
 fun LocationPermissionRequest(
     modifier: Modifier = Modifier,
     onPermissionGranted: @Composable () -> Unit
@@ -556,17 +750,3 @@ fun LocationPermissionRequest(
     }
 }
 
-@Composable
-fun MyLocationButton(
-    modifier: Modifier = Modifier,
-    onClick: suspend () -> Unit
-) {
-    val scope = rememberCoroutineScope()
-
-    FloatingActionButton(
-        modifier = modifier,
-        onClick = { scope.launch { onClick() } }
-    ) {
-        Icon(Icons.Default.MyLocation, contentDescription = "My Location")
-    }
-}

@@ -34,13 +34,13 @@ fun TrashMap(
     var mapProperties by remember {
         mutableStateOf(
             MapProperties(
-                isMyLocationEnabled = true
+                isMyLocationEnabled = false // Always false - we handle location manually
             )
         )
     }
     var mapUiSettings by remember {
         mutableStateOf(
-            // disable map toolbar and compass for a cleaner UI
+            // disable map toolbar, compass, and location button for a cleaner UI
             MapUiSettings(
                 mapToolbarEnabled = false,
                 compassEnabled = false,
