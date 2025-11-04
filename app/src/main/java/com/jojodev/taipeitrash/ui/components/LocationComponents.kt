@@ -1,6 +1,5 @@
 package com.jojodev.taipeitrash.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -97,7 +96,6 @@ fun PermissionDialog(
                         onClick = onDismiss,
                         modifier = Modifier
                             .weight(1f)
-                            .background(MaterialTheme.colorScheme.surface)
                     ) {
                         Text(
                             text = "Cancel",
