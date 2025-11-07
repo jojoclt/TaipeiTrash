@@ -18,13 +18,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ZoomIn
@@ -347,11 +353,9 @@ fun AppContent(
                         onClick = { showSettings = true },
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(
-                                start = 16.dp,
-                                top = WindowInsets.statusBars.asPaddingValues()
-                                    .calculateTopPadding() + 16.dp
-                            )
+                            .systemBarsPadding()
+                            .displayCutoutPadding()
+                            .padding(16.dp)
                     ) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
@@ -378,11 +382,9 @@ fun AppContent(
                         hasPermission = hasLocationPermission == true,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(
-                                end = 16.dp,
-                                top = WindowInsets.statusBars.asPaddingValues()
-                                    .calculateTopPadding() + 16.dp
-                            )
+                            .systemBarsPadding()
+                            .displayCutoutPadding()
+                            .padding(16.dp)
                     ) {
                         if (hasLocationPermission == true) {
                             scope.launch {
@@ -435,8 +437,11 @@ fun AppContent(
                         },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
+                            .displayCutoutPadding()
+                            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
                             .padding(paddingValues)
                             .padding(16.dp)
+
                     )
 
                     // Permission Dialog
