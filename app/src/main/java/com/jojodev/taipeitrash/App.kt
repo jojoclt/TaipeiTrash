@@ -82,6 +82,9 @@ import com.jojodev.taipeitrash.ui.components.PermissionDialog
 import com.jojodev.taipeitrash.ui.components.UserLocationMarker
 import com.jojodev.taipeitrash.ui.components.VerticalZoomControls
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
@@ -92,11 +95,23 @@ import kotlinx.coroutines.tasks.await
 fun App(modifier: Modifier = Modifier) {
     var isExpanded by remember { mutableStateOf(false) }
 
+    val startupViewModel: StartupViewModel = hiltViewModel()
+    val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
+    val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
+
+    val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
+    val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
+
     // Show app content directly without requesting permission
     AppContent(
         isExpanded = isExpanded,
         onExpandedChange = { isExpanded = it },
-        modifier = modifier
+        modifier = modifier,
+        isLoaded = isLoaded,
+        loadingProgress = loadingProgress,
+        trashCan = trashCan.toPersistentList(),
+        trashCar = trashCar.toPersistentList()
+
     )
 }
 
@@ -105,12 +120,13 @@ fun App(modifier: Modifier = Modifier) {
 fun AppContent(
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoaded: Boolean? = true,
+    loadingProgress: Float = 0f,
+    trashCan: PersistentList<TrashCan> = persistentListOf(),
+    trashCar: PersistentList<TrashCar> = persistentListOf()
 ) {
-
-    val startupViewModel: StartupViewModel = hiltViewModel()
-    val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
-    val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     // Persist across tab switches and settings navigation
     var selectedTrashModel by remember { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
@@ -123,7 +139,7 @@ fun AppContent(
             SplashScreen(modifier = modifier)
         }
 
-        !isLoaded!! -> {
+        !isLoaded -> {
             // Loading data - show progress
             val loadingFloat by animateFloatAsState(loadingProgress)
             BoardingScreen(
@@ -133,7 +149,6 @@ fun AppContent(
         }
 
         else -> {
-            val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val activity = LocalActivity.current
 
@@ -148,8 +163,6 @@ fun AppContent(
             var userLocation by remember { mutableStateOf<LatLng?>(null) }
             var showPermissionDialog by remember { mutableStateOf(false) }
 
-            val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
-            val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
             var filteredTrashCan by remember { mutableStateOf(emptyList<TrashCan>()) }
             var filteredTrashCar by remember { mutableStateOf(emptyList<TrashCar>()) }
 
@@ -484,7 +497,6 @@ fun AppContent(
             ) {
                 com.jojodev.taipeitrash.settings.SettingsScreen(
                     onNavigateBack = { showSettings = false },
-                    startupViewModel = startupViewModel
                 )
             }
 
