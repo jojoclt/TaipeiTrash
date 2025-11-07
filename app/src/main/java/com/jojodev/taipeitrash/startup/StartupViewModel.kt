@@ -33,6 +33,9 @@ class StartupViewModel @Inject constructor(
     private val preferencesDataStore: AppPreferencesDataStore
 ) : ViewModel() {
 
+    init {
+        Log.d("StartupViewModel", "init:")
+    }
     private val _trashCarProgress = MutableStateFlow(0f)
     private val _trashCanProgress = MutableStateFlow(0f)
 

@@ -91,11 +91,12 @@ import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 @Composable
 fun App(modifier: Modifier = Modifier) {
@@ -182,19 +183,19 @@ fun AppContent(
 
             LaunchedEffect(selectedTab, cameraPositionState.isMoving, isMapLoaded) {
                 snapshotFlow { cameraPositionState.isMoving }
-                    .mapLatest { it }
                     .filter { !it }.collect {
                         val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
                         val zoom = cameraPositionState.position.zoom
-
                         if (zoom >= 16f) {
-                            bounds?.let { bound ->
-                                when (selectedTab) {
-                                    TrashTab.TrashCan -> filteredTrashCan =
-                                        trashCan.fastFilter { bound.contains(it.toLatLng()) }
+                            withContext(Dispatchers.Default) {
+                                bounds?.let { bound ->
+                                    when (selectedTab) {
+                                        TrashTab.TrashCan -> filteredTrashCan =
+                                            trashCan.fastFilter { bound.contains(it.toLatLng()) }
 
-                                    TrashTab.GarbageTruck -> filteredTrashCar =
-                                        trashCar.fastFilter { bound.contains(it.toLatLng()) }
+                                        TrashTab.GarbageTruck -> filteredTrashCar =
+                                            trashCar.fastFilter { bound.contains(it.toLatLng()) }
+                                    }
                                 }
                             }
                         } else {
