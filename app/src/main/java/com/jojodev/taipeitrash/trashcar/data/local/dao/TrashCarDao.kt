@@ -8,7 +8,7 @@ import com.jojodev.taipeitrash.trashcar.data.local.entities.TrashCarEntity
 @Dao
 interface TrashCarDao {
     @Upsert
-    suspend fun updateTrashCar(trashCan: List<TrashCarEntity>)
+    suspend fun update(trashCan: List<TrashCarEntity>)
 
     @Query("DELETE FROM trashcar")
     suspend fun deleteTrashCar()

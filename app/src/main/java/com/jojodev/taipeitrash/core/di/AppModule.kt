@@ -20,7 +20,9 @@ object AppModule {
             applicationContext,
             TrashDatabase::class.java,
             "trash.db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
 
     @Provides
     @Singleton

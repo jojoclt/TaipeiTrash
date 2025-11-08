@@ -4,10 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.data.AppPreferencesDataStore
+import com.jojodev.taipeitrash.core.model.City
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
-import com.jojodev.taipeitrash.trashcan.data.TrashCanRepository
+import com.jojodev.taipeitrash.trashcan.data.repository.TrashCanRepository
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
-import com.jojodev.taipeitrash.trashcar.data.TrashCarRepository
+import com.jojodev.taipeitrash.trashcar.data.repository.TrashCarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,11 +16,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -36,6 +40,14 @@ class StartupViewModel @Inject constructor(
     init {
         Log.d("StartupViewModel", "init:")
     }
+
+    // Current selected city
+    val selectedCity: StateFlow<City> = preferencesDataStore.selectedCity
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = City.TAIPEI
+        )
     private val _trashCarProgress = MutableStateFlow(0f)
     private val _trashCanProgress = MutableStateFlow(0f)
 
@@ -60,10 +72,22 @@ class StartupViewModel @Inject constructor(
     )
 
     private val _trashCar = MutableStateFlow(emptyList<TrashCar>())
-    val trashCar: StateFlow<List<TrashCar>> = _trashCar.asStateFlow()
-
+    val trashCar =
+        _trashCar.onEach { Log.d("StartupViewModel", "trashCar for ${selectedCity.first()}: ${it.size}") }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Lazily,
+                initialValue = emptyList()
+            )
     private val _trashCan = MutableStateFlow(emptyList<TrashCan>())
-    val trashCan: StateFlow<List<TrashCan>> = _trashCan.asStateFlow()
+    val trashCan =
+        _trashCan.onEach { Log.d("StartupViewModel", "trashCan for ${selectedCity.first()}: ${it.size}") }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Lazily,
+                initialValue = emptyList()
+            )
+
 
     // Derived flows that expose the first item's importDate (or empty string)
     val trashCarLastRefresh: StateFlow<String> = trashCar
@@ -91,26 +115,33 @@ class StartupViewModel @Inject constructor(
     private fun String.parseDateTime() = runCatching {
         LocalDateTime.parse(this.replace(' ', 'T'))
             .format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
-    }.getOrElse { "-" }
+    }.getOrElse { LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) }
 
     private fun loadData() {
         viewModelScope.launch {
             try {
                 _isLoaded.value = false // Mark as loading
+                val city = selectedCity.value
 
                 // Load data with progress tracking
                 // Repository will handle local cache vs network fetch
                 coroutineScope {
                     launch {
                         _trashCar.value =
-                            trashCarRepository.getTrashCars(forceUpdate = false) { progress ->
+                            trashCarRepository.getTrashCars(
+                                city = city,
+                                forceUpdate = false
+                            ) { progress ->
                                 _trashCarProgress.value = progress
                             }
                     }
 
                     launch {
                         _trashCan.value =
-                            trashCanRepository.getTrashCans(forceUpdate = false) { progress ->
+                            trashCanRepository.getTrashCans(
+                                city = city,
+                                forceUpdate = false
+                            ) { progress ->
                                 _trashCanProgress.value = progress
                             }
                     }
@@ -131,18 +162,25 @@ class StartupViewModel @Inject constructor(
                 _isLoaded.value = false
                 _trashCarProgress.value = 0f
                 _trashCanProgress.value = 0f
+                val city = selectedCity.value
 
                 coroutineScope {
                     launch {
                         _trashCar.value =
-                            trashCarRepository.getTrashCars(forceUpdate = true) { progress ->
+                            trashCarRepository.getTrashCars(
+                                city = city,
+                                forceUpdate = true
+                            ) { progress ->
                                 _trashCarProgress.value = progress
                             }
                     }
 
                     launch {
                         _trashCan.value =
-                            trashCanRepository.getTrashCans(forceUpdate = true) { progress ->
+                            trashCanRepository.getTrashCans(
+                                city = city,
+                                forceUpdate = true
+                            ) { progress ->
                                 _trashCanProgress.value = progress
                             }
                     }
@@ -153,6 +191,17 @@ class StartupViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("StartupViewModel", "Failed to refresh data", e)
                 _isLoaded.value = true
+            }
+        }
+    }
+
+    fun setCity(city: City) {
+        viewModelScope.launch {
+            val previousCity = selectedCity.value
+            if (previousCity != city) {
+                preferencesDataStore.setSelectedCity(city)
+                // Clear cached data and reload for the new city
+                forceRefresh()
             }
         }
     }

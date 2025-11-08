@@ -39,8 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jojodev.taipeitrash.BuildConfig
+import com.jojodev.taipeitrash.core.model.City
 import com.jojodev.taipeitrash.startup.StartupViewModel
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import androidx.compose.material3.RadioButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +57,7 @@ fun SettingsScreen(
     val lastRefresh by startupViewModel.lastRefresh.collectAsStateWithLifecycle("")
     val trashCanLast by startupViewModel.trashCanLastRefresh.collectAsStateWithLifecycle("")
     val trashCarLast by startupViewModel.trashCarLastRefresh.collectAsStateWithLifecycle("")
+    val selectedCity by startupViewModel.selectedCity.collectAsStateWithLifecycle()
 
     BackHandler {
         onNavigateBack()
@@ -67,6 +70,8 @@ fun SettingsScreen(
         lastRefresh = lastRefresh,
         trashCanLast = trashCanLast,
         trashCarLast = trashCarLast,
+        selectedCity = selectedCity,
+        onCitySelected = startupViewModel::setCity,
         onForceRefresh = startupViewModel::forceRefresh,
         modifier = modifier
     )
@@ -81,6 +86,8 @@ fun SettingsScreenContent(
     lastRefresh: String,
     trashCanLast: String,
     trashCarLast: String,
+    selectedCity: City,
+    onCitySelected: (City) -> Unit,
     onForceRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -105,6 +112,42 @@ fun SettingsScreenContent(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // City Selection Section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "City",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    HorizontalDivider()
+
+                    City.entries.forEach { city ->
+                        CitySelectionItem(
+                            city = city,
+                            isSelected = city == selectedCity,
+                            onSelect = { onCitySelected(city) },
+                            enabled = isLoaded != false
+                        )
+                    }
+
+                    Text(
+                        text = "Select your city to view trash collection data",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             // Data Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -230,6 +273,38 @@ fun SettingsScreenContent(
 }
 
 @Composable
+private fun CitySelectionItem(
+    city: City,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = onSelect,
+            enabled = enabled
+        )
+        Text(
+            text = city.displayName,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            }
+        )
+    }
+}
+
+@Composable
 private fun SettingItem(
     label: String,
     value: String,
@@ -264,6 +339,8 @@ fun SettingsScreenPreview() {
             lastRefresh = "2025-11-04 12:00",
             trashCanLast = "2025-11-04 11:50",
             trashCarLast = "2025-11-04 11:55",
+            selectedCity = City.TAIPEI,
+            onCitySelected = {},
             onForceRefresh = {}
         )
     }

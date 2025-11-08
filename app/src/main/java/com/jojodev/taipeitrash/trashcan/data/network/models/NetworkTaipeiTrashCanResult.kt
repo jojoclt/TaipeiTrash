@@ -5,22 +5,22 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NetworkTrashCanResult(
-    val result: TrashCanResult
+data class NetworkTaipeiTrashCanResult(
+    val result: NetworkTaipeiTrashCanResultBody
 )
 
 @Serializable
-data class TrashCanResult(
+data class NetworkTaipeiTrashCanResultBody(
     val count: Int,
     val limit: Int,
     val offset: Int,
     @SerialName("results")
-    val trashCans: List<NetworkTrashCan>,
+    val trashCans: List<TaipeiTrashCans>,
     val sort: String
 )
 
 @Serializable
-data class NetworkTrashCan(
+data class TaipeiTrashCans(
     val _id: Int,
     val _importdate: Importdate,
     @SerialName("備註")

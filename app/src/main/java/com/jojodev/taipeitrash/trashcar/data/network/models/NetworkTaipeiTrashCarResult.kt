@@ -4,13 +4,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NetworkTrashCarResult(
+data class NetworkTaipeiTrashCarResult(
     @SerialName("result")
-    val result: TrashCarResult
+    val result: NetworkTaipeiTrashCarResultBody
 )
 
 @Serializable
-data class TrashCarResult(
+data class NetworkTaipeiTrashCarResultBody(
     @SerialName("limit")
     val limit: Int,
     @SerialName("offset")
@@ -20,11 +20,11 @@ data class TrashCarResult(
     @SerialName("sort")
     val sort: String,
     @SerialName("results")
-    val results: List<NetworkTrashCar>
+    val results: List<TaipeiTrashCars>
 )
 
 @Serializable
-data class NetworkTrashCar(
+data class TaipeiTrashCars(
     @SerialName("_id")
     val id: Int,
     @SerialName("_importdate")

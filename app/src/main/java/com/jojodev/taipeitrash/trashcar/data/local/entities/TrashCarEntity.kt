@@ -14,4 +14,6 @@ data class TrashCarEntity(
     val district: String,
     val timeArrive: String,
     val timeLeave: String,
+    val trashDay: String? = null,
+    val recycleDay: String? = null
 )

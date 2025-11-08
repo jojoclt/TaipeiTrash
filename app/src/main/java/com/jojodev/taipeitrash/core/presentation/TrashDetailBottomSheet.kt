@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,19 +34,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.jojodev.taipeitrash.core.model.TrashModel
 import com.jojodev.taipeitrash.core.model.TrashType
+import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
-import com.jojodev.taipeitrash.ui.theme.markerTruckNeutral
-import com.jojodev.taipeitrash.ui.theme.markerTrashCan
-import androidx.compose.ui.tooling.preview.Preview
+import com.jojodev.taipeitrash.ui.components.WeekDayIndicator
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import com.jojodev.taipeitrash.ui.theme.markerTrashCan
 import com.jojodev.taipeitrash.ui.theme.markerTruckGreen
-import com.jojodev.taipeitrash.ui.theme.markerTruckYellow
+import com.jojodev.taipeitrash.ui.theme.markerTruckNeutral
 import com.jojodev.taipeitrash.ui.theme.markerTruckRed
-import androidx.compose.foundation.layout.height
+import com.jojodev.taipeitrash.ui.theme.markerTruckYellow
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -69,17 +71,13 @@ fun TrashDetailBottomSheet(
         ) {
             // Header with icon and title
             TrashDetailHeader(trashModel = trashModel, trashType = trashType)
+            if (trashModel is TrashCan) return@Column
 
             HorizontalDivider()
-
             // Details section
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                DetailItem(
-                    label = "District",
-                    value = trashModel.district
-                )
 
                 when (trashModel) {
                     is TrashCar -> {
@@ -91,6 +89,40 @@ fun TrashDetailBottomSheet(
                             label = "Departure Time",
                             value = trashModel.timeLeave.formatTime()
                         )
+
+                        // Show schedule if available (for cities like Hsinchu)
+                        if (trashModel.trashDays.isNotEmpty() || trashModel.recycleDays.isNotEmpty()) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Collection Schedule",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                WeekDayIndicator(
+                                    trashDays = trashModel.trashDays,
+                                    recycleDays = trashModel.recycleDays
+                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    modifier = Modifier.padding(top = 4.dp)
+                                ) {
+                                    ScheduleLegend(
+                                        color = Color(0xFFE57373),
+                                        label = "Trash"
+                                    )
+                                    ScheduleLegend(
+                                        color = Color(0xFF64B5F6),
+                                        label = "Recycle"
+                                    )
+                                    ScheduleLegend(
+                                        color = Color(0xFF4CAF50),
+                                        label = "Both"
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -298,6 +330,31 @@ private fun DetailItem(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun ScheduleLegend(
+    color: Color,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(color)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

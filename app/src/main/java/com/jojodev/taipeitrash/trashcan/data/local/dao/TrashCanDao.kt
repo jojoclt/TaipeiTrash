@@ -8,7 +8,7 @@ import com.jojodev.taipeitrash.trashcan.data.local.entities.TrashCanEntity
 @Dao
 interface TrashCanDao {
     @Upsert
-    suspend fun updateTrash(trashCan: List<TrashCanEntity>)
+    suspend fun update(trashCan: List<TrashCanEntity>)
 
     @Query("DELETE FROM trashcan")
     suspend fun deleteTrash()

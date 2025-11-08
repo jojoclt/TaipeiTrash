@@ -2,9 +2,9 @@ package com.jojodev.taipeitrash.trashcan.data.mapper
 
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcan.data.local.entities.TrashCanEntity
-import com.jojodev.taipeitrash.trashcan.data.network.models.NetworkTrashCan
+import com.jojodev.taipeitrash.trashcan.data.network.models.TaipeiTrashCans
 
-fun NetworkTrashCan.asEntity() =
+fun TaipeiTrashCans.asEntity() =
     TrashCanEntity(
         id = _id,
         importDate = _importdate.date,

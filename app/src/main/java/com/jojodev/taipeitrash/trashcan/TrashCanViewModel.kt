@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.Results
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
-import com.jojodev.taipeitrash.trashcan.data.TrashCanRepository
+import com.jojodev.taipeitrash.trashcan.data.repository.TrashCanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,7 +42,7 @@ class TrashCanViewModel @Inject constructor(private val trashCanRepository: Tras
         return viewModelScope.launch {
             try {
                 _uiState.value = Results.Loading
-                val results = trashCanRepository.getTrashCans(forceUpdate)
+                val results = trashCanRepository.getTrashCans(forceUpdate = forceUpdate)
                 _importDate.emit(results[0].importDate)
                 _uiState.value = Results.Success(results)
             } catch (e: Exception) {

@@ -9,7 +9,7 @@ import com.jojodev.taipeitrash.trashcar.data.local.entities.TrashCarEntity
 
 @Database(
     entities = [TrashCanEntity::class, TrashCarEntity::class],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class TrashDatabase: RoomDatabase() {

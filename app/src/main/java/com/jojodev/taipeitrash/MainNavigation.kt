@@ -8,7 +8,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.jojodev.taipeitrash.trashcan.presentation.TrashCanScreen
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -32,7 +31,6 @@ fun MainNavigation(
                 PermissionViewModel(context)
             }
 
-            TrashCanScreen(permissionViewModel)
         }
     }
 }
