@@ -108,6 +108,7 @@ fun App(modifier: Modifier = Modifier) {
 
     val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
     val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
+    val selectedCity by startupViewModel.selectedCity.collectAsStateWithLifecycle()
 
     // Show app content directly without requesting permission
     AppContent(
@@ -117,8 +118,8 @@ fun App(modifier: Modifier = Modifier) {
         isLoaded = isLoaded,
         loadingProgress = loadingProgress,
         trashCan = trashCan.toPersistentList(),
-        trashCar = trashCar.toPersistentList()
-
+        trashCar = trashCar.toPersistentList(),
+        selectedCity = selectedCity
     )
 }
 
@@ -131,7 +132,8 @@ fun AppContent(
     isLoaded: Boolean? = true,
     loadingProgress: Float = 0f,
     trashCan: PersistentList<TrashCan> = persistentListOf(),
-    trashCar: PersistentList<TrashCar> = persistentListOf()
+    trashCar: PersistentList<TrashCar> = persistentListOf(),
+    selectedCity: com.jojodev.taipeitrash.core.model.City = com.jojodev.taipeitrash.core.model.City.TAIPEI
 ) {
     val context = LocalContext.current
 
@@ -177,8 +179,7 @@ fun AppContent(
             val selectedMarkerId = selectedTrashModel?.first?.id
 
             val cameraPositionState = rememberCameraPositionState {
-                val taipeiMain = LatLng(25.0474, 121.5171)
-                position = CameraPosition.fromLatLngZoom(taipeiMain, 17f)
+                position = CameraPosition.fromLatLngZoom(selectedCity.getDefaultLocation(), 17f)
             }
 
             LaunchedEffect(selectedTab, cameraPositionState.isMoving, isMapLoaded) {
@@ -489,6 +490,22 @@ fun AppContent(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                Spacer(Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        scope.launch {
+                                            cameraPositionState.animate(
+                                                CameraUpdateFactory.newLatLngZoom(
+                                                    selectedCity.getDefaultLocation(),
+                                                    17f
+                                                ),
+                                                durationMs = 1000
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Text("Go to ${selectedCity.displayName}")
+                                }
                             }
                         }
                     }

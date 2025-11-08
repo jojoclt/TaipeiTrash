@@ -16,7 +16,7 @@ fun HsinchuPointData.asEntity(
     return TrashCarEntity(
         id = pointId.toIntOrNull() ?: 0,
         importDate = currentDate,
-        address = address,
+        address = pointName,
         longitude = longitude.toDouble(),
         latitude = latitude.toDouble(),
         district = district,

@@ -23,14 +23,14 @@ data class TrashCar(
      * Check if trash collection is available on the given day
      */
     fun isTrashDayAvailable(day: DayOfWeek): Boolean {
-        return trashDays.isEmpty() || trashDays.contains(day)
+        return trashDays.contains(day)
     }
 
     /**
      * Check if recycling collection is available on the given day
      */
     fun isRecycleDayAvailable(day: DayOfWeek): Boolean {
-        return recycleDays.isEmpty() || recycleDays.contains(day)
+        return recycleDays.contains(day)
     }
 
     /**

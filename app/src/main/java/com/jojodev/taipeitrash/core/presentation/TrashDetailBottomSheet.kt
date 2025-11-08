@@ -194,6 +194,7 @@ private fun TrashDetailHeader(
                 // Subscribe to the minute ticker so the header recomposes every minute
                 val currentMinute = rememberCurrentMinute()
 
+                // fixme
                 // Special-case: on Wednesdays and Sundays there is no service -> show a specific chip
                 val today = LocalDate.now().dayOfWeek
                 if (today == DayOfWeek.WEDNESDAY || today == DayOfWeek.SUNDAY) {
