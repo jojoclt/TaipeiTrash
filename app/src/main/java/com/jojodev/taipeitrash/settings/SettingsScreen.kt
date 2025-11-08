@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -147,50 +146,50 @@ fun SettingsScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // City Selection Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                onClick = onCityClick
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "City",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = selectedCity.displayName,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Select city",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Text(
-                        text = "Tap to change city",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+//            Card(
+//                modifier = Modifier.fillMaxWidth(),
+//                colors = CardDefaults.cardColors(
+//                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+//                ),
+//                onClick = onCityClick
+//            ) {
+//                Column(
+//                    modifier = Modifier.padding(16.dp),
+//                    verticalArrangement = Arrangement.spacedBy(12.dp)
+//                ) {
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.SpaceBetween,
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Column(
+//                            verticalArrangement = Arrangement.spacedBy(4.dp)
+//                        ) {
+//                            Text(
+//                                text = "City",
+//                                style = MaterialTheme.typography.titleMedium,
+//                                fontWeight = FontWeight.Bold
+//                            )
+//                            Text(
+//                                text = selectedCity.displayName,
+//                                style = MaterialTheme.typography.bodyLarge,
+//                                color = MaterialTheme.colorScheme.primary
+//                            )
+//                        }
+//                        Icon(
+//                            imageVector = Icons.Default.ChevronRight,
+//                            contentDescription = "Select city",
+//                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+//                        )
+//                    }
+//
+//                    Text(
+//                        text = "Tap to change city",
+//                        style = MaterialTheme.typography.bodySmall,
+//                        color = MaterialTheme.colorScheme.onSurfaceVariant
+//                    )
+//                }
+//            }
 
             // Data Section
             Card(

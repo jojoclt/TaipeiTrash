@@ -32,12 +32,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.Button
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -57,6 +55,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
@@ -109,20 +109,20 @@ fun App(modifier: Modifier = Modifier) {
     val startupViewModel: StartupViewModel = hiltViewModel()
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
-    val isFirstLaunch by startupViewModel.isFirstLaunch.collectAsStateWithLifecycle()
+//    val isFirstLaunch by startupViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 
     val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
     val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
     val selectedCity by startupViewModel.selectedCity.collectAsStateWithLifecycle()
 
     // Show first launch city selection if it's the first time
-    if (isFirstLaunch) {
-        com.jojodev.taipeitrash.onboarding.FirstLaunchCitySelection(
-            onCitySelected = { city ->
-                startupViewModel.completeFirstLaunch(city)
-            }
-        )
-    } else {
+//    if (isFirstLaunch) {
+//        com.jojodev.taipeitrash.onboarding.FirstLaunchCitySelection(
+//            onCitySelected = { city ->
+//                startupViewModel.completeFirstLaunch(city)
+//            }
+//        )
+//    } else {
         // Show app content
         AppContent(
             isExpanded = isExpanded,
@@ -134,7 +134,7 @@ fun App(modifier: Modifier = Modifier) {
             trashCar = trashCar.toPersistentList(),
             selectedCity = selectedCity
         )
-    }
+//    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalCoroutinesApi::class)
