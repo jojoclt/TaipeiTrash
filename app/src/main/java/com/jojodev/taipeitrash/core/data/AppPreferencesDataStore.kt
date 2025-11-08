@@ -23,6 +23,7 @@ class AppPreferencesDataStore @Inject constructor(
     private object PreferencesKeys {
         val IS_DATA_LOADED = booleanPreferencesKey("is_data_loaded")
         val SELECTED_CITY = stringPreferencesKey("selected_city")
+        val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
     }
 
     val isDataLoaded: Flow<Boolean> = context.dataStore.data
@@ -36,6 +37,11 @@ class AppPreferencesDataStore @Inject constructor(
             City.fromString(cityString)
         }
 
+    val isFirstLaunch: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[PreferencesKeys.IS_FIRST_LAUNCH] ?: true
+        }
+
     suspend fun setDataLoaded(isLoaded: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_DATA_LOADED] = isLoaded
@@ -45,6 +51,12 @@ class AppPreferencesDataStore @Inject constructor(
     suspend fun setSelectedCity(city: City) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.SELECTED_CITY] = city.name
+        }
+    }
+
+    suspend fun setFirstLaunchComplete() {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.IS_FIRST_LAUNCH] = false
         }
     }
 

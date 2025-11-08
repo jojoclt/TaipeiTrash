@@ -33,8 +33,11 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.Button
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -80,6 +83,7 @@ import com.jojodev.taipeitrash.core.presentation.TrashMap
 import com.jojodev.taipeitrash.core.presentation.TrashMarkerIcon
 import com.jojodev.taipeitrash.core.presentation.TrashTab
 import com.jojodev.taipeitrash.core.presentation.rememberCurrentMinute
+import com.jojodev.taipeitrash.settings.SettingsScreen
 import com.jojodev.taipeitrash.startup.StartupViewModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
@@ -105,22 +109,32 @@ fun App(modifier: Modifier = Modifier) {
     val startupViewModel: StartupViewModel = hiltViewModel()
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
+    val isFirstLaunch by startupViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 
     val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
     val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
     val selectedCity by startupViewModel.selectedCity.collectAsStateWithLifecycle()
 
-    // Show app content directly without requesting permission
-    AppContent(
-        isExpanded = isExpanded,
-        onExpandedChange = { isExpanded = it },
-        modifier = modifier,
-        isLoaded = isLoaded,
-        loadingProgress = loadingProgress,
-        trashCan = trashCan.toPersistentList(),
-        trashCar = trashCar.toPersistentList(),
-        selectedCity = selectedCity
-    )
+    // Show first launch city selection if it's the first time
+    if (isFirstLaunch) {
+        com.jojodev.taipeitrash.onboarding.FirstLaunchCitySelection(
+            onCitySelected = { city ->
+                startupViewModel.completeFirstLaunch(city)
+            }
+        )
+    } else {
+        // Show app content
+        AppContent(
+            isExpanded = isExpanded,
+            onExpandedChange = { isExpanded = it },
+            modifier = modifier,
+            isLoaded = isLoaded,
+            loadingProgress = loadingProgress,
+            trashCan = trashCan.toPersistentList(),
+            trashCar = trashCar.toPersistentList(),
+            selectedCity = selectedCity
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalCoroutinesApi::class)
@@ -457,9 +471,55 @@ fun AppContent(
                         )
                     }
 
+                    // No data available message - show when trash can tab is selected but city has no trash cans
+                    if (isMapLoaded && selectedTab == TrashTab.TrashCan && trashCan.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(16.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                                )
+                                .padding(20.dp)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Text(
+                                    text = "No Trash Cans Available",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "${selectedCity.displayName} doesn't have trash can data in our system.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "Try switching to Garbage Truck tab to see collection routes.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
                     // Zoom prompt - show when zoom is too low to display markers
                     val currentZoom = cameraPositionState.position.zoom
-                    if (isMapLoaded && currentZoom < 16f) {
+                    if (isMapLoaded && currentZoom < 16f &&
+                        !(selectedTab == TrashTab.TrashCan && trashCan.isEmpty())) {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.Center)
@@ -518,7 +578,7 @@ fun AppContent(
                 enter = slideInHorizontally(initialOffsetX = { -it }, animationSpec = spring()),
                 exit = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = spring())
             ) {
-                com.jojodev.taipeitrash.settings.SettingsScreen(
+               SettingsScreen(
                     onNavigateBack = { showSettings = false },
                 )
             }

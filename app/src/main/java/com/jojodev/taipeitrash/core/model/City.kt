@@ -14,7 +14,7 @@ enum class City(val displayName: String) {
      */
     fun getDefaultLocation(): LatLng {
         return when (this) {
-            TAIPEI -> LatLng(25.0330, 121.5654) // Taipei Main Station
+            TAIPEI -> LatLng(25.0475, 121.5170) // Taipei Main Station
             HSINCHU -> LatLng(24.8138, 120.9675) // Hsinchu City Hall
         }
     }

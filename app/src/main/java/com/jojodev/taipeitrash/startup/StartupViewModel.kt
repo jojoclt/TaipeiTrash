@@ -48,6 +48,14 @@ class StartupViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = City.TAIPEI
         )
+
+    // First launch detection
+    val isFirstLaunch: StateFlow<Boolean> = preferencesDataStore.isFirstLaunch
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = true
+        )
     private val _trashCarProgress = MutableStateFlow(0f)
     private val _trashCanProgress = MutableStateFlow(0f)
 
@@ -203,6 +211,15 @@ class StartupViewModel @Inject constructor(
                 // Clear cached data and reload for the new city
                 forceRefresh()
             }
+        }
+    }
+
+    fun completeFirstLaunch(city: City) {
+        viewModelScope.launch {
+            preferencesDataStore.setSelectedCity(city)
+            preferencesDataStore.setFirstLaunchComplete()
+            // Load initial data
+            loadData()
         }
     }
 
