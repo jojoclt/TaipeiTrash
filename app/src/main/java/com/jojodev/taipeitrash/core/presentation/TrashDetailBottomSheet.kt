@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -97,8 +98,10 @@ fun TrashDetailBottomSheet(
                             rememberCurrentMinute()
                         )
 
-                        if (minutes == null && color == markerTrashCan)
-                            TruckStatus(isFixed = trashModel.isFixed)
+                        TruckStatus(
+                            isFixed = trashModel.isFixed,
+                            collecting = minutes == null && color == markerTrashCan
+                        )
                         DetailItem(
                             label = "Arrival Time",
                             value = trashModel.timeArrive.formatTime()
@@ -476,7 +479,11 @@ fun PulsatingDot(
 }
 
 @Composable
-private fun TruckStatus(modifier: Modifier = Modifier, isFixed: Boolean) {
+private fun TruckStatus(
+    modifier: Modifier = Modifier,
+    isFixed: Boolean,
+    collecting: Boolean = false
+) {
     val accentColor =
         if (isFixed) MaterialTheme.colorScheme.onPrimaryContainer else Color(0xFF0056FE)
     val background = if (isFixed) Color(0xFFFEFEFE) else Color(0xFFFFFFFF)
@@ -496,7 +503,15 @@ private fun TruckStatus(modifier: Modifier = Modifier, isFixed: Boolean) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PulsatingDot(color = accentColor)
+            if (collecting) PulsatingDot(color = accentColor)
+            else Box(modifier = Modifier.size(14.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(accentColor)
+                )
+            }
 
             Text(
                 text = text,
@@ -512,7 +527,7 @@ private fun TruckStatus(modifier: Modifier = Modifier, isFixed: Boolean) {
 private fun TruckStatusPreview() {
     TaipeiTrashTheme {
         Column {
-            TruckStatus(isFixed = true)
+            TruckStatus(isFixed = true, collecting = true)
             TruckStatus(isFixed = false)
 
         }
