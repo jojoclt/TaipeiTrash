@@ -16,6 +16,7 @@ data class TrashCar(
     val timeArrive: String,
     val timeLeave: String,
     // Schedule fields - only for TrashCar (garbage trucks)
+    val isFixed: Boolean,
     val trashDays: Set<DayOfWeek> = emptySet(),  // Days when trash is collected
     val recycleDays: Set<DayOfWeek> = emptySet() // Days when recycling is collected
 ) : TrashModel {

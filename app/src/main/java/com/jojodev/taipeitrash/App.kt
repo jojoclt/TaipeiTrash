@@ -109,32 +109,22 @@ fun App(modifier: Modifier = Modifier) {
     val startupViewModel: StartupViewModel = hiltViewModel()
     val isLoaded by startupViewModel.isLoaded.collectAsStateWithLifecycle()
     val loadingProgress by startupViewModel.loadingProgress.collectAsStateWithLifecycle()
-//    val isFirstLaunch by startupViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 
     val trashCan by startupViewModel.trashCan.collectAsStateWithLifecycle()
     val trashCar by startupViewModel.trashCar.collectAsStateWithLifecycle()
     val selectedCity by startupViewModel.selectedCity.collectAsStateWithLifecycle()
 
-    // Show first launch city selection if it's the first time
-//    if (isFirstLaunch) {
-//        com.jojodev.taipeitrash.onboarding.FirstLaunchCitySelection(
-//            onCitySelected = { city ->
-//                startupViewModel.completeFirstLaunch(city)
-//            }
-//        )
-//    } else {
-        // Show app content
-        AppContent(
-            isExpanded = isExpanded,
-            onExpandedChange = { isExpanded = it },
-            modifier = modifier,
-            isLoaded = isLoaded,
-            loadingProgress = loadingProgress,
-            trashCan = trashCan.toPersistentList(),
-            trashCar = trashCar.toPersistentList(),
-            selectedCity = selectedCity
-        )
-//    }
+    // Show app content
+    AppContent(
+        isExpanded = isExpanded,
+        onExpandedChange = { isExpanded = it },
+        modifier = modifier,
+        isLoaded = isLoaded,
+        loadingProgress = loadingProgress,
+        trashCan = trashCan.toPersistentList(),
+        trashCar = trashCar.toPersistentList(),
+        selectedCity = selectedCity
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalCoroutinesApi::class)
@@ -153,7 +143,7 @@ fun AppContent(
 
     // Persist across tab switches and settings navigation
     var selectedTrashModel by remember { mutableStateOf<Pair<TrashModel, TrashType>?>(null) }
-    var selectedTab by rememberSaveable { mutableStateOf(TrashTab.TrashCan) }
+    var selectedTab by rememberSaveable { mutableStateOf(TrashTab.GarbageTruck) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
 
     when {

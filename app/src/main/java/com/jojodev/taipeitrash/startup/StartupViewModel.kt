@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jojodev.taipeitrash.core.data.AppPreferencesDataStore
 import com.jojodev.taipeitrash.core.model.City
+import com.jojodev.taipeitrash.core.model.TrashModel
 import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcan.data.repository.TrashCanRepository
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
@@ -99,10 +100,7 @@ class StartupViewModel @Inject constructor(
 
     // Derived flows that expose the first item's importDate (or empty string)
     val trashCarLastRefresh: StateFlow<String> = trashCar
-        .map { list ->
-            val datetime = if (list.isNotEmpty()) list.first().importDate else ""
-            datetime.parseDateTime()
-        }
+        .map(::showTime)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
@@ -110,10 +108,7 @@ class StartupViewModel @Inject constructor(
         )
 
     val trashCanLastRefresh: StateFlow<String> = trashCan
-        .map { list ->
-            val datetime = if (list.isNotEmpty()) list.first().importDate else ""
-            datetime.parseDateTime()
-        }
+        .map(::showTime)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
@@ -226,5 +221,11 @@ class StartupViewModel @Inject constructor(
     private fun nowString(): String {
         val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         return fmt.format(Date())
+    }
+
+    private fun showTime(list: List<TrashModel>): String {
+        val datetime = if (list.isNotEmpty()) list.first().importDate else return ""
+        return if (datetime.isEmpty()) ""
+        else datetime.parseDateTime()
     }
 }

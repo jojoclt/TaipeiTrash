@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -119,8 +120,14 @@ fun computeTruckMarkerState(arrivalTime: String?, departureTime: String?, curren
  */
 @Composable
 fun rememberCurrentMinute(): LocalTime {
-    val minuteFlow = minuteTicker.map { it.toLocalTime() }
+    // ✅ 1. Wrap the transformation in remember
+    val minuteFlow = remember(minuteTicker) {
+        minuteTicker.map { it.toLocalTime() }
+    }
+
+    // ✅ 2. Collect the remembered flow
     val current by minuteFlow.collectAsStateWithLifecycle(initialValue = LocalTime.now())
+
     return current
 }
 

@@ -22,9 +22,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
 
-enum class TrashTab {
-    TrashCan,
-    GarbageTruck
+enum class TrashTab(val header: String) {
+    GarbageTruck("Garbage Truck"),
+    TrashCan("Trash Can")
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -33,7 +33,7 @@ fun TaipeiTrashBottomSheet(
     isExpanded: Boolean,
     onExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    selectedTab: TrashTab = TrashTab.TrashCan,
+    selectedTab: TrashTab = TrashTab.GarbageTruck,
     onTabChange: (TrashTab) -> Unit = {},
     bottomSheetContent: @Composable (ColumnScope.() -> Unit) = {},
     content: @Composable (PaddingValues) -> Unit
@@ -57,15 +57,13 @@ fun TopHeader(
     selectedTab: TrashTab = TrashTab.TrashCan,
     onTabChange: (TrashTab) -> Unit = {}
 ) {
-    val options = listOf("Trash Can", "Garbage Truck")
-
     Row(
         modifier.padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
         val modifiers = listOf(Modifier.weight(1f), Modifier.weight(1.5f), Modifier.weight(1f))
 
-        options.forEachIndexed { index, label ->
+        TrashTab.entries.forEachIndexed { index, label ->
             ToggleButton(
                 checked = selectedTab.ordinal == index,
                 onCheckedChange = {
@@ -75,7 +73,7 @@ fun TopHeader(
                 shapes =
                     when (index) {
                         0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        TrashTab.entries.size - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     },
                 elevation = ButtonDefaults.elevatedButtonElevation()
@@ -85,7 +83,7 @@ fun TopHeader(
 //                        contentDescription = "Localized description",
 //                    )
                 Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                Text(label)
+                Text(label.header)
             }
         }
     }

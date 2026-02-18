@@ -1,6 +1,7 @@
 package com.jojodev.taipeitrash.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -66,6 +67,11 @@ private fun DayIndicator(
         else -> MaterialTheme.colorScheme.surfaceVariant // Gray - none
     }
 
+    val outlineColor = when {
+        !hasTrash && !hasRecycle -> Color.LightGray
+        else -> Color.Transparent
+    }
+
     val textColor = when {
         hasTrash || hasRecycle -> Color.White
         else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -75,7 +81,7 @@ private fun DayIndicator(
         modifier = modifier
             .size(28.dp)
             .clip(CircleShape)
-            .background(backgroundColor),
+            .background(backgroundColor).border(0.5.dp, outlineColor, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -87,7 +93,7 @@ private fun DayIndicator(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun WeekDayIndicatorPreview() {
     TaipeiTrashTheme {
@@ -108,7 +114,7 @@ fun WeekDayIndicatorPreview() {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun WeekDayIndicatorAllDaysPreview() {
     TaipeiTrashTheme {
@@ -120,7 +126,7 @@ fun WeekDayIndicatorAllDaysPreview() {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun WeekDayIndicatorNoDaysPreview() {
     TaipeiTrashTheme {

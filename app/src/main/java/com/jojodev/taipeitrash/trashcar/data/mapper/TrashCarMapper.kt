@@ -15,5 +15,6 @@ fun TrashCarEntity.asExternalModel() =
         timeArrive = timeArrive,
         timeLeave = timeLeave,
         trashDays = DayOfWeek.parseFromString(trashDay),
-        recycleDays = DayOfWeek.parseFromString(recycleDay)
+        recycleDays = DayOfWeek.parseFromString(recycleDay),
+        isFixed = isFixed
     )

@@ -14,5 +14,6 @@ fun TaipeiTrashCars.asEntity() =
         timeArrive = timeArrive,
         timeLeave = timeLeave,
         trashDay = "1,2,4,5,6",  // Taipei doesn't have per-item schedules
-        recycleDay = "1,2,4,5,6"
+        recycleDay = "1,2,4,5,6",
+        isFixed = true
     )

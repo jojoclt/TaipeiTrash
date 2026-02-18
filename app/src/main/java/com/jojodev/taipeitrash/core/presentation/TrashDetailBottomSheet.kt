@@ -4,12 +4,21 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +53,7 @@ import com.jojodev.taipeitrash.trashcan.data.TrashCan
 import com.jojodev.taipeitrash.trashcar.data.TrashCar
 import com.jojodev.taipeitrash.ui.components.WeekDayIndicator
 import com.jojodev.taipeitrash.ui.theme.TaipeiTrashTheme
+import com.jojodev.taipeitrash.ui.theme.chipColorGray
 import com.jojodev.taipeitrash.ui.theme.markerTrashCan
 import com.jojodev.taipeitrash.ui.theme.markerTruckGreen
 import com.jojodev.taipeitrash.ui.theme.markerTruckNeutral
@@ -73,7 +84,6 @@ fun TrashDetailBottomSheet(
             TrashDetailHeader(trashModel = trashModel, trashType = trashType)
             if (trashModel is TrashCan) return@Column
 
-            HorizontalDivider()
             // Details section
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -81,6 +91,14 @@ fun TrashDetailBottomSheet(
 
                 when (trashModel) {
                     is TrashCar -> {
+                        val (color, minutes) = computeTruckMarkerState(
+                            trashModel.timeArrive,
+                            trashModel.timeLeave,
+                            rememberCurrentMinute()
+                        )
+
+                        if (minutes == null && color == markerTrashCan)
+                            TruckStatus(isFixed = trashModel.isFixed)
                         DetailItem(
                             label = "Arrival Time",
                             value = trashModel.timeArrive.formatTime()
@@ -89,6 +107,8 @@ fun TrashDetailBottomSheet(
                             label = "Departure Time",
                             value = trashModel.timeLeave.formatTime()
                         )
+
+                        HorizontalDivider()
 
                         // Show schedule if available (for cities like Hsinchu)
                         if (trashModel.trashDays.isNotEmpty() || trashModel.recycleDays.isNotEmpty()) {
@@ -198,9 +218,13 @@ private fun TrashDetailHeader(
                 // Special-case: on Wednesdays and Sundays there is no service -> show a specific chip
                 val today = LocalDate.now().dayOfWeek
                 if (today == DayOfWeek.WEDNESDAY || today == DayOfWeek.SUNDAY) {
-                    InfoChip(text = "Not available on Wed & Sun", background = markerTruckNeutral)
+                    InfoChip(text = "Not available on Wed & Sun", background = chipColorGray)
                 } else {
-                    val (color, minutes) = computeTruckMarkerState(trashModel.timeArrive, trashModel.timeLeave, currentMinute)
+                    val (color, minutes) = computeTruckMarkerState(
+                        trashModel.timeArrive,
+                        trashModel.timeLeave,
+                        currentMinute
+                    )
                     // Show arriving minutes chip when available and within visible threshold
                     if (minutes != null && minutes <= GREEN_THRESHOLD_MIN) {
                         ArrivalChip(minutes = minutes, background = color)
@@ -219,7 +243,8 @@ private fun TrashDetailHeader(
 
             // Show status for Trash Can: blue = Available, gray = Unknown
             if (trashType == TrashType.TRASH_CAN) {
-                val isUnknown = (trashModel.latitude == 0.0 && trashModel.longitude == 0.0) || trashModel.address.isBlank()
+                val isUnknown =
+                    (trashModel.latitude == 0.0 && trashModel.longitude == 0.0) || trashModel.address.isBlank()
                 val target = if (isUnknown) markerTruckNeutral else markerTrashCan
                 StatusChip(isUnknown = isUnknown, background = target)
             }
@@ -235,7 +260,10 @@ private fun TrashDetailHeader(
             val pm = context.packageManager
 
             // Use geo: URI so the system will open the user's preferred map app
-            var intent = Intent(Intent.ACTION_VIEW, "geo:$lat,$lng?q=$lat,$lng(${Uri.encode(label)})".toUri())
+            var intent = Intent(
+                Intent.ACTION_VIEW,
+                "geo:$lat,$lng?q=$lat,$lng(${Uri.encode(label)})".toUri()
+            )
             if (intent.resolveActivity(pm) != null) {
                 if (context !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
@@ -243,7 +271,10 @@ private fun TrashDetailHeader(
             }
 
             // Fallback to Google Maps web
-            intent = Intent(Intent.ACTION_VIEW, "https://www.google.com/maps/search/?api=1&query=$lat,$lng".toUri())
+            intent = Intent(
+                Intent.ACTION_VIEW,
+                "https://www.google.com/maps/search/?api=1&query=$lat,$lng".toUri()
+            )
             if (context !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         }) {
@@ -258,7 +289,8 @@ private fun TrashDetailHeader(
 @Composable
 private fun ArrivalChip(minutes: Int, background: Color, modifier: Modifier = Modifier) {
     // choose contrasting text color (white for dark backgrounds, black for light)
-    val textColor = if ((background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f) < 0.6f) Color.White else Color.Black
+    val textColor =
+        if ((background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f) < 0.6f) Color.White else Color.Black
 
     Box(
         modifier = modifier
@@ -269,14 +301,19 @@ private fun ArrivalChip(minutes: Int, background: Color, modifier: Modifier = Mo
             .wrapContentWidth(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Arriving in ${minutes} min", color = textColor, style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = "Arriving in ${minutes} min",
+            color = textColor,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 
 @Composable
 private fun InfoChip(text: String, background: Color, modifier: Modifier = Modifier) {
     // choose contrasting text color (white for dark backgrounds, black for light)
-    val textColor = if ((background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f) < 0.6f) Color.White else Color.Black
+    val textColor =
+        if ((background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f) < 0.6f) Color.White else Color.Black
 
     Box(
         modifier = modifier
@@ -295,7 +332,8 @@ private fun InfoChip(text: String, background: Color, modifier: Modifier = Modif
 private fun StatusChip(isUnknown: Boolean, background: Color, modifier: Modifier = Modifier) {
     val animated = animateColorAsState(targetValue = background)
     val text = if (isUnknown) "Status: Unknown" else "Status: Available"
-    val textColor = if ((animated.value.red * 0.2126f + animated.value.green * 0.7152f + animated.value.blue * 0.0722f) < 0.6f) Color.White else Color.Black
+    val textColor =
+        if ((animated.value.red * 0.2126f + animated.value.green * 0.7152f + animated.value.blue * 0.0722f) < 0.6f) Color.White else Color.Black
 
     Box(
         modifier = modifier
@@ -330,7 +368,8 @@ private fun DetailItem(
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -369,7 +408,10 @@ private fun String.formatTime(): String {
 @Composable
 fun ArrivalChipPreview() {
     TaipeiTrashTheme {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             ArrivalChip(minutes = 120, background = markerTruckGreen)
             Spacer(modifier = Modifier.height(8.dp))
             ArrivalChip(minutes = 45, background = markerTruckYellow)
@@ -385,5 +427,102 @@ fun ArrivalChipPreview() {
             Spacer(modifier = Modifier.height(8.dp))
             InfoChip(text = "No more for today", background = markerTruckNeutral)
         }
+    }
+}
+
+@Composable
+fun PulsatingDot(
+    modifier: Modifier = Modifier,
+    color: Color = Color(0xFF0056FE)
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse_transition")
+
+    // Animate scale from 1x to 2.5x
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "scale"
+    )
+
+    // Animate alpha from 0.7 to 0
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "alpha"
+    )
+
+    Box(modifier = modifier.size(14.dp), contentAlignment = Alignment.Center) {
+        // Pulsating outer ring
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawCircle(
+                color = color,
+                radius = (size.minDimension / 2) * scale,
+                alpha = alpha
+            )
+        }
+        // Solid center dot
+        Canvas(modifier = Modifier.size(6.dp)) {
+            drawCircle(color = color)
+        }
+    }
+}
+
+@Composable
+private fun TruckStatus(modifier: Modifier = Modifier, isFixed: Boolean) {
+    val accentColor =
+        if (isFixed) MaterialTheme.colorScheme.onPrimaryContainer else Color(0xFF0056FE)
+    val background = if (isFixed) Color(0xFFFEFEFE) else Color(0xFFFFFFFF)
+    val text = if (isFixed) "At Collection Point" else "Moving Along Route"
+
+    Box(
+        modifier = modifier
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(background)
+            .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(12.dp)) // Added for visibility
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .wrapContentWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PulsatingDot(color = accentColor)
+
+            Text(
+                text = text,
+                color = accentColor,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TruckStatusPreview() {
+    TaipeiTrashTheme {
+        Column {
+            TruckStatus(isFixed = true)
+            TruckStatus(isFixed = false)
+
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun BottomSheetPreview() {
+    TaipeiTrashTheme {
+
     }
 }

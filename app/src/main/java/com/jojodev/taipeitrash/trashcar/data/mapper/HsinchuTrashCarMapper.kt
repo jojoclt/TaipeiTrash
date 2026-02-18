@@ -23,6 +23,7 @@ fun HsinchuPointData.asEntity(
         timeArrive = timeArrive,
         timeLeave = timeLeave,
         trashDay = trashDay,
-        recycleDay = recycleDay
+        recycleDay = recycleDay,
+        isFixed = taskType == "10"
     )
 }
